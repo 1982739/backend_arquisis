@@ -19,7 +19,7 @@ orm.sequelize.authenticate()
   .catch(err => console.error('Error connecting to database:', err));
 
 app.get("/", (req, res) => {
-  res.send("Servidor funcionando 🚀");
+  res.send("Servidor funcionando ");
 });
 
 app.listen(PORT, () => {

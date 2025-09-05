@@ -32,12 +32,12 @@ function startMQTT() {
     try {
       data = JSON.parse(message.toString());
     } catch (err) {
-      console.warn("⚠️ Mensaje no es JSON válido:", err.message);
+      console.warn("Mensaje no es JSON válido:", err.message);
       return;
     }
 
     if (!data.url) {
-      console.warn("⚠️ Mensaje recibido sin campo 'url':", data);
+      console.warn("Mensaje recibido sin campo 'url':", data);
       return;
     }
 
@@ -51,19 +51,19 @@ function startMQTT() {
         await axios.put(`${API_URL}/properties/${existing.id}`, {
           visit: currentVisit + 1,
         });
-        console.log("🔄 Propiedad actualizada:", existing.name);
+        console.log("Propiedad actualizada:", existing.name);
       } else {
         data.visit = 1;
         const created = await axios.post(`${API_URL}/properties`, data);
-        console.log("🆕 Nueva propiedad creada:", created.data.name);
+        console.log("Nueva propiedad creada:", created.data.name);
       }
 
     } catch (err) {
-      console.warn("⚠️ Error al procesar mensaje:", err.message);
+      console.warn("Error al procesar mensaje:", err.message);
     }
   });
 
   client.on("error", (err) => {
-    console.error("❌ Error en cliente MQTT:", err);
+    console.error("Error en cliente MQTT:", err);
   });
 }
