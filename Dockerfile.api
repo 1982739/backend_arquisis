@@ -1,0 +1,23 @@
+# Dockerfile.api
+FROM node:20-alpine3.21
+
+# Crear directorio de trabajo
+WORKDIR /usr/src/app
+
+# Copiar package.json y package-lock.json primero para aprovechar cache
+COPY package*.json ./
+
+# Instalar dependencias del proyecto
+RUN npm install --legacy-peer-deps
+
+# Instalar sequelize-cli globalmente
+RUN npm install -g sequelize-cli
+
+# Copiar todos los archivos del proyecto al contenedor
+COPY . .
+
+# Exponer puerto de la app
+EXPOSE 3000
+
+# Comando de inicio: migraciones y luego arrancar la app
+CMD sh -c "sequelize db:migrate && npm start"

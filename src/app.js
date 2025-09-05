@@ -1,0 +1,27 @@
+const express = require("express");
+const dotenv = require("dotenv");
+const {Sequelize} = require("sequelize");
+const orm = require("./models/index.js");
+const propertyRoutes = require("./routes/properties.js");
+dotenv.config();
+
+const app = express();
+
+app.locals.orm = orm;
+
+const PORT = process.env.PORT || 3000;
+
+app.use(express.json());
+app.use('/', propertyRoutes);
+//database connection
+orm.sequelize.authenticate()
+  .then(() => console.log('Database connected!'))
+  .catch(err => console.error('Error connecting to database:', err));
+
+app.get("/", (req, res) => {
+  res.send("Servidor funcionando 🚀");
+});
+
+app.listen(PORT, () => {
+  console.log(`Servidor escuchando en http://localhost:${PORT}`);
+});
