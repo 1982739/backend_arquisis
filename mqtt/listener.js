@@ -16,17 +16,18 @@ const client = mqtt.connect(MQTT_URL, options);
 
 client.on("connect", () => {
   console.log("Conectado al broker MQTT");
-  client.subscribe(MQTT_TOPIC, (err) => {
+  client.subscribe([MQTT_INFO_TOPIC, MQTT_VALIDATION_TOPIC], (err) => {
     if (err) {
       console.error("Error al suscribirse:", err);
     } else {
-      console.log(`Suscrito al topic: ${MQTT_INFO_TOPIC}`);
+      console.log(`Suscrito a los topics: ${MQTT_INFO_TOPIC}, ${MQTT_VALIDATION_TOPIC}`);
     }
   });
 });
 
 client.on("message", async (topic, message) => {
-  console.log("Mensaje recibido:", message.toString());
+  console.log(`Mensaje recibido en ${topic}:`, message.toString());
+
   let data;
   try {
     data = JSON.parse(message.toString());
@@ -35,37 +36,45 @@ client.on("message", async (topic, message) => {
     return;
   }
 
-  if (!data.url) {
-    console.warn("Mensaje recibido sin campo 'url':", data);
-    return;
-  }
+  switch (topic) {
+    case MQTT_INFO_TOPIC:
+      if (!data.url) {
+        console.warn("Mensaje recibido sin campo 'url':", data);
+        return;
+      }
 
-  try {
-    const API_URL = process.env.API_URL || "http://api:3000"; 
+      try {
+        const API_URL = process.env.API_URL || "http://api:3000"; 
+        const res = await axios.get(`${API_URL}/properties?url=${encodeURIComponent(data.url)}`);
+        const existing = Array.isArray(res.data) ? res.data[0] : null;
 
-    const res = await axios.get(`${API_URL}/properties?url=${encodeURIComponent(data.url)}`);
-    const existing = Array.isArray(res.data) ? res.data[0] : null;
-    if (existing) {
-      const currentVisit = existing.visit || 0;
-      await axios.put(`${API_URL}/properties/${existing.id}`, {
-        visit: currentVisit + 1,
-      });
-      console.log("Propiedad actualizada:", existing.name);
-    } else {
-      data.visit = 1;
-      const created = await axios.post(`${API_URL}/properties`, data);
-      console.log("Nueva propiedad creada:", created.data.name);
-    }
+        if (existing) {
+          const currentVisit = existing.visit || 0;
+          await axios.put(`${API_URL}/properties/${existing.id}`, { visit: currentVisit + 1 });
+          console.log("Propiedad actualizada:", existing.name);
+        } else {
+          data.visit = 1;
+          const created = await axios.post(`${API_URL}/properties`, data);
+          console.log("Nueva propiedad creada:", created.data.name);
+        }
+      } catch (err) {
+        console.warn("Error al procesar mensaje:", err.message);
+      }
+      break;
 
-  } catch (err) {
-    console.warn("Error al procesar mensaje:", err.message);
+    case MQTT_VALIDATION_TOPIC:
+   
+      console.log("Procesando mensaje de validación:", data);
+      console.log(data);
+      break;
+
+    default:
+      console.warn("Topic no reconocido:", topic);
   }
 });
 
-client.on("error", (err) => {
-  console.error("Error en cliente MQTT:", err);
-});
 
+/* publisher */ 
 const app = express();
 app.use(express.json());
 
