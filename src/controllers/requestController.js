@@ -22,14 +22,17 @@ async function createRequest(req, res) {
       timestamp: new Date().toISOString()
     });
 
-    client.publish("properties/requests", JSON.stringify({
+    await axios.post("http://listener:4000/request", {
+      topic: process.env.MQTT_REQUEST_TOPIC || "properties/requests",
+      message: {
         request_id: newRequest.request_id,
         group_id: newRequest.group_id,
         timestamp: newRequest.timestamp,
         url: newRequest.url,
         origin: newRequest.origin,
         operation: newRequest.operation
-    }));
+      }
+    });
 
     res.status(201).json(newRequest);
   } catch (err) {
