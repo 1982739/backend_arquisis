@@ -1,10 +1,12 @@
 const { request: Request, propertie } = require("../models");
 const { v4: uuidv4 } = require("uuid");
 const mqtt = require("mqtt");
-const client = mqtt.connect(process.env.MQTT_URL, {
-  username: process.env.MQTT_USER,
-  password: process.env.MQTT_PASS
-});
+const axios = require("axios");
+const propertyController = require("./propertyController.js");
+// const client = mqtt.connect(process.env.MQTT_URL, {
+//   username: process.env.MQTT_USER,
+//   password: process.env.MQTT_PASS
+// });
 
 async function createRequest(req, res) {
   try {
@@ -21,6 +23,9 @@ async function createRequest(req, res) {
       status: 'pending',
       timestamp: new Date().toISOString()
     });
+
+    propertyController.updateProperty({visit: visit - 1}, res);
+    // Publicar el mensaje en el broker MQTT
 
     await axios.post("http://listener:4000/request", {
       topic: process.env.MQTT_REQUEST_TOPIC || "properties/requests",
@@ -50,5 +55,7 @@ async function listRequests(req, res) {
     res.status(500).json({ error: "Internal server error" });
   }
 }
+
+
 
 module.exports = { createRequest, listRequests };

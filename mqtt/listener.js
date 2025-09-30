@@ -67,6 +67,10 @@ client.on("message", async (topic, message) => {
       console.log("Procesando mensaje de validación:", data);
       console.log(data);
       break;
+    case MQTT_REQUEST_TOPIC:
+      console.log("Procesando mensaje de request:", data);
+      console.log(data);
+      break;
 
     default:
       console.warn("Topic no reconocido:", topic);
