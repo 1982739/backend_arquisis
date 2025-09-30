@@ -28,6 +28,8 @@ services:
       - api
     networks:
       - app-network
+    ports:
+      - "4000:4000"
     restart: unless-stopped
 
   postgres:
