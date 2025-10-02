@@ -49,6 +49,18 @@ async function getPropertyById(req, res) {
         }
     }
 
+async function getPropertyByUrl(req, res) {
+    try {
+        const property = await propertie.findOne({ where: { url: req.params.url } });
+        if (!property) {
+            return res.status(404).json({ error: "Property not found" });
+        }
+        res.json(property);
+    } catch (err) {
+        res.status(500).json({ error: "Error al obtener propiedad" });
+    }
+}
+
 async function createProperty(req, res) {
     try {
         const newProperty = await propertie.create(req.body);
@@ -74,4 +86,4 @@ async function updateProperty(req, res) {
 }
 
 
-module.exports = {getProperties, getPropertyById, createProperty, updateProperty};
+module.exports = {getProperties, getPropertyById, getPropertyByUrl, createProperty, updateProperty};
