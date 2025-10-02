@@ -21,7 +21,6 @@ async function manageValidationCallback(data) {
     console.log(`Request ID: ${request_id}, Status: ${status}, Reason: ${reason}`);
     const request_info = await requestservices.getRequestByRequestId(request_id);
     if (status === "REJECTED") {
-      // Lógica para manejar solicitudes rechazadas
       const property_id = request_info.property_id;
       await propertyservices.updatePropertyInternal(property_id, { visit: request_info.visit + 1 });
       console.log(`La solicitud ${request_id} ha sido rechazada por: ${reason}`);
