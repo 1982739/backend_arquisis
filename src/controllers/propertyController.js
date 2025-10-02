@@ -71,6 +71,7 @@ async function createProperty(req, res) {
     }
 }
 
+
 async function updateProperty(req, res) {
     try {
         const property = await propertie.findByPk(req.params.id);

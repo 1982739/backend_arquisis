@@ -3,6 +3,8 @@ const { v4: uuidv4 } = require("uuid");
 const mqtt = require("mqtt");
 const axios = require("axios");
 const propertyController = require("./propertyController.js");
+const {propertyservices} = require("../utils/propertyServices.js");
+const {requestservices} = require("../utils/requestServices.js");
 // const client = mqtt.connect(process.env.MQTT_URL, {
 //   username: process.env.MQTT_USER,
 //   password: process.env.MQTT_PASS
@@ -44,7 +46,7 @@ async function createRequest(req, res) {
     });
     // Publicar el mensaje en el broker MQTT
     await sendRequest(newRequest);
-    await propertyController.updateProperty(property.id, { visit: property.visit - 1 });
+    await propertyservices.updatePropertyInternal(property.id, { visit: property.visit - 1 });
     res.status(201).json(newRequest);
   } catch (err) {
     console.error("Error en createRequest:", err);
@@ -76,7 +78,7 @@ async function reciveRequest(req, res) {
 
     console.log("Solicitud recibida:", req.body);
 
-    await propertyController.updateProperty(property.id, { visit: property.visit - 1 });
+    await propertyservices.updatePropertyInternal(property.id, { visit: property.visit - 1 });
 
 
     return res.status(201).json(newRequest);
@@ -100,4 +102,6 @@ async function listRequests(req, res) {
 }
 
 
-module.exports = { createRequest, listRequests, reciveRequest };
+
+
+module.exports = { createRequest, listRequests, reciveRequest, getRequestByRequestId };
