@@ -46,7 +46,9 @@ async function createRequest(req, res) {
     });
     // Publicar el mensaje en el broker MQTT
     await sendRequest(newRequest);
+   
     await propertyservices.updatePropertyInternal(property.id, { visit: property.visit - 1 });
+    
     res.status(201).json(newRequest);
   } catch (err) {
     console.error("Error en createRequest:", err);
@@ -77,10 +79,9 @@ async function reciveRequest(req, res) {
     });
 
     console.log("Solicitud recibida:", req.body);
-
+    
     await propertyservices.updatePropertyInternal(property.id, { visit: property.visit - 1 });
-
-
+    
     return res.status(201).json(newRequest);
 
   } catch (err) {

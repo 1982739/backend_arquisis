@@ -6,4 +6,12 @@ async function updatePropertyInternal(propertyId, updateData) {
     return await property.update(updateData);
 }
 
-module.exports = {updatePropertyInternal}
+
+async function findPropertyById(id) {
+  const property = await propertie.findByPk(id);
+  if (!property) {
+    return null; // retornamos null si no existe
+  }
+  return property;
+}
+module.exports = {updatePropertyInternal, findPropertyById}

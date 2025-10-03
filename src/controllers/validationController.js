@@ -18,16 +18,26 @@ async function manageValidationCallback(req, res) {
     if (!request_id || !status) {
       return res.status(400).json({ error: "Faltan campos requeridos" });
     }
-
+    // buscar info de la request
     const request_info = await requestservices.getRequestByRequestId(request_id);
     if (!request_info) {
       return res.status(404).json({ error: "Request not found" });
     }
-
+    const property = await propertyservices.getPropertyById(request_info.property_id);
+    if (!property) {
+        return res.status(404).json({ error: "Property not found" });
+      }
     if (status === "REJECTED") {
-      await propertyservices.incrementVisits(request_info.property_id);
+      const newVisit = property.visit < 0 ? 0 : property.visit + 1;
+      await propertyservices.updatePropertyInternal(property.id, { visit: newVisit });
+      await requestservices.updateRequestStatus(request_id, "REJECTED");
+
       console.log(`La solicitud ${request_id} ha sido rechazada por: ${reason}`);
     } else if (status === "ACCEPTED") {
+      if (property.visit < 0) {
+        await propertyservices.updatePropertyInternal(property.id, { visit: 0 });
+      }
+      await requestservices.updateRequestStatus(request_id, "ACCEPTED");
       // lógica para descontar dinero
       console.log(`La solicitud ${request_id} ha sido aceptada`);
     }
