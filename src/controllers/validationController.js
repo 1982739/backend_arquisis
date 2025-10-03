@@ -14,24 +14,35 @@ async function listValidations(req, res) {
   }
 }
 
-async function manageValidationCallback(data) {
+async function manageValidationCallback(req, res) {
   try {
-    const { request_id, status, reason } = data;
-    // Aquí puedes manejar la lógica de la respuesta de validación
-    console.log(`Request ID: ${request_id}, Status: ${status}, Reason: ${reason}`);
-    const request_info = await requestservices.getRequestByRequestId(request_id);
-    if (status === "REJECTED") {
-      const property_id = request_info.property_id;
-      await propertyservices.updatePropertyInternal(property_id, { visit: request_info.visit + 1 });
-      console.log(`La solicitud ${request_id} ha sido rechazada por: ${reason}`);
-    }
-    else if (status === "ACCEPTED") {
-      //descontar dinero a usuario
+    const { request_id, status, reason } = req.body;
+    if (!request_id || !status) {
+      return res.status(400).json({ error: "Faltan campos requeridos" });
     }
 
+    const request_info = await Request.findOne({ where: { request_id } });
+    if (!request_info) {
+      return res.status(404).json({ error: "Request not found" });
+    }
+
+    if (status === "REJECTED") {
+      await propertie.increment("visit", { 
+        by: 1, 
+        where: { id: request_info.property_id } 
+      });
+      console.log(`La solicitud ${request_id} ha sido rechazada por: ${reason}`);
+    } else if (status === "ACCEPTED") {
+      // descontar dinero a usuario
+      console.log(`La solicitud ${request_id} ha sido aceptada`);
+    }
+
+    return res.status(200).json({ message: "Callback procesado correctamente" });
   } catch (err) {
-    console.error(err);
+    console.error("Error en manageValidationCallback:", err);
+    return res.status(500).json({ error: "Internal server error" });
   }
 }
+
 
 module.exports = { listValidations, manageValidationCallback };
