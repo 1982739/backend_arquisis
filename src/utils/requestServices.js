@@ -35,4 +35,4 @@ async function updateRequestStatus(request_id, status) {
 }
 
 
-module.exports = {getRequestByRequestId, updateRequestStatus};
+module.exports = {requestservices: {getRequestByRequestId, updateRequestStatus}};

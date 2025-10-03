@@ -14,4 +14,12 @@ async function findPropertyById(id) {
   }
   return property;
 }
-module.exports = {updatePropertyInternal, findPropertyById}
+
+async function getPropertyById(id) {
+  const property = await propertie.findByPk(id);
+  if (!property) {
+    return null; // retornamos null si no existe
+  }
+  return property;
+}
+module.exports = {propertyservices: {updatePropertyInternal, findPropertyById, getPropertyById}}

@@ -105,4 +105,4 @@ async function listRequests(req, res) {
 
 
 
-module.exports = { createRequest, listRequests, reciveRequest, getRequestByRequestId };
+module.exports = { createRequest, listRequests, reciveRequest };
