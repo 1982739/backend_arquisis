@@ -1,5 +1,6 @@
 const express = require("express");
 const dotenv = require("dotenv");
+const cors = require("cors");
 const {Sequelize} = require("sequelize");
 const orm = require("./models/index.js");
 const propertyRoutes = require("./routes/properties.js");
@@ -8,6 +9,7 @@ const validationRoutes = require("./routes/validations.js");
 dotenv.config();
 
 const app = express();
+app.use(cors());
 
 app.locals.orm = orm;
 
