@@ -14,6 +14,7 @@ module.exports = (sequelize, DataTypes) => {
     }
   }
   propertie.init({
+    id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
     name: DataTypes.STRING,
     price: DataTypes.FLOAT,
     currency: DataTypes.STRING,
