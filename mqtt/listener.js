@@ -16,11 +16,11 @@ const client = mqtt.connect(MQTT_URL, options);
 
 client.on("connect", () => {
   console.log("Conectado al broker MQTT");
-  client.subscribe([MQTT_INFO_TOPIC, MQTT_VALIDATION_TOPIC], (err) => {
+  client.subscribe([MQTT_INFO_TOPIC, MQTT_VALIDATION_TOPIC, MQTT_REQUEST_TOPIC], (err) => {
     if (err) {
       console.error("Error al suscribirse:", err);
     } else {
-      console.log(`Suscrito a los topics: ${MQTT_INFO_TOPIC}, ${MQTT_VALIDATION_TOPIC}`);
+      console.log(`Suscrito a los topics: ${MQTT_INFO_TOPIC}, ${MQTT_VALIDATION_TOPIC}, ${MQTT_REQUEST_TOPIC}`);
     }
   });
 });
@@ -62,31 +62,6 @@ client.on("message", async (topic, message) => {
         console.warn("Error al procesar mensaje:", err.message);
       }
       break;
-    //Escuchar respuestas de validación, para mis requests y de los demás
-    case MQTT_VALIDATION_TOPIC:
-      console.log("Procesando mensaje de validación:", data);
-
-      try {
-        const API_URL = process.env.API_URL || "http://api:3000";
-        const response = await axios.post(`${API_URL}/managevalidation`, data);
-
-        console.log("Validación registrada con éxito:", response.data);
-      } catch (err) {
-        if (err.response) {
-          // Error de la API (código 4xx o 5xx)
-          console.error("Error al registrar validación:", {
-            status: err.response.status,
-            data: err.response.data,
-          });
-        } else if (err.request) {
-          // No hubo respuesta del servidor
-          console.error("No hubo respuesta del servidor de validación:", err.message);
-        } else {
-          // Otro tipo de error
-          console.error("Error inesperado en validación:", err.message);
-        }
-      }
-      break;
     //Escuchar request hechas por otros grupos
     case MQTT_REQUEST_TOPIC:
       console.log("Procesando mensaje de request:", data);
@@ -122,6 +97,32 @@ client.on("message", async (topic, message) => {
         }
       }
       break;
+    //Escuchar respuestas de validación, para mis requests y de los demás
+    case MQTT_VALIDATION_TOPIC:
+      console.log("Procesando mensaje de validación:", data);
+
+      try {
+        const API_URL = process.env.API_URL || "http://api:3000";
+        const response = await axios.post(`${API_URL}/managevalidation`, data);
+
+        console.log("Validación registrada con éxito:", response.data);
+      } catch (err) {
+        if (err.response) {
+          // Error de la API (código 4xx o 5xx)
+          console.error("Error al registrar validación:", {
+            status: err.response.status,
+            data: err.response.data,
+          });
+        } else if (err.request) {
+          // No hubo respuesta del servidor
+          console.error("No hubo respuesta del servidor de validación:", err.message);
+        } else {
+          // Otro tipo de error
+          console.error("Error inesperado en validación:", err.message);
+        }
+      }
+      break;
+    
 
     default:
       console.warn("Topic no reconocido:", topic);

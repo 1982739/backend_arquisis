@@ -2,7 +2,7 @@ const { request: Request, propertie } = require("../models");
 async function getRequestByRequestId(request_id) {
   try {
     const request = await Request.findOne({
-      where: { request_id }
+      where: { 'request_id': request_id }
     });
 
     if (!request) {
@@ -19,7 +19,7 @@ async function updateRequestStatus(request_id, status) {
   try {
     const [updated] = await Request.update(
       { status },
-      { where: { request_id } }
+      { where: {'request_id': request_id } }
     );
 
     if (updated === 0) {
