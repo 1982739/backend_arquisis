@@ -103,6 +103,7 @@ client.on("message", async (topic, message) => {
 
       try {
         const API_URL = process.env.API_URL || "http://api:3000";
+        await new Promise((resolve) => setTimeout(resolve, 2000));
         const response = await axios.post(`${API_URL}/managevalidation`, data);
 
         console.log("Validación registrada con éxito:", response.data);
