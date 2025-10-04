@@ -4,5 +4,6 @@ const validationController = require("../controllers/validationController");
 
 
 router.get("/validation", validationController.listValidations);
+router.post("/managevalidation", validationController.manageValidationCallback);
 
 module.exports = router;
