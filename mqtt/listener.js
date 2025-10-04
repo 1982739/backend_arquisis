@@ -106,7 +106,7 @@ client.on("message", async (topic, message) => {
         }
         
         //Si tengo la propiedad, llamo API para crear el request
-        const response = await axios.post(`${API_URL}/recive/request/${encodeURIComponent(data.url)}`, data);
+        const response = await axios.post(`${API_URL}/recive/request`, data);
         console.log("Request registrado con éxito:", response.data);
           
       }catch(err){
