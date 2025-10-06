@@ -3,8 +3,7 @@ const { User } = require("../models");
 // Obtener el wallet del usuario actual
 exports.getWallet = async (req, res) => {
   try {
-    const auth0_id = req.user.sub; // viene del token JWT (ej: "auth0|abc123")
-
+    const auth0_id = req.auth.sub; // viene del token JWT (ej: "auth0|abc123")
     const user = await User.findOne({ where: { auth0_id } });
     if (!user) return res.status(404).json({ error: "User not found" });
 
@@ -18,7 +17,7 @@ exports.getWallet = async (req, res) => {
 // Recargar el wallet
 exports.rechargeWallet = async (req, res) => {
   try {
-    const auth0_id = req.user.sub;
+    const auth0_id = req.auth.sub;
     const { amount } = req.body;
 
     if (!amount || amount <= 0) {
@@ -41,7 +40,7 @@ exports.rechargeWallet = async (req, res) => {
 // Crear usuario (se llama cuando un usuario se registra por primera vez)
 exports.createUserIfNotExists = async (req, res) => {
   try {
-    const { sub, email } = req.user;
+    const { sub, email } = req.auth;
 
     const [user, created] = await User.findOrCreate({
       where: { auth0_id: sub },
