@@ -6,6 +6,7 @@ const orm = require("./models/index.js");
 const propertyRoutes = require("./routes/properties.js");
 const requestRoutes = require("./routes/requests.js");
 const validationRoutes = require("./routes/validations.js");
+const userRoutes = require("./routes/users.js");
 dotenv.config();
 
 const app = express();
@@ -19,6 +20,7 @@ app.use(express.json());
 app.use('/', propertyRoutes);
 app.use('/', requestRoutes);
 app.use('/', validationRoutes);
+app.use('/', userRoutes);
 
 //database connection
 orm.sequelize.authenticate()
