@@ -37,7 +37,7 @@ exports.rechargeWallet = async (req, res) => {
   }
 };
 
-// Crear usuario (se llama cuando un usuario se registra por primera vez).
+// Crear usuario (se llama cuando un usuario se registra por primera vez)...
 exports.createUserIfNotExists = async (req, res) => {
   try {
     const { sub, email } = req.auth;
