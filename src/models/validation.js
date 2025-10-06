@@ -3,9 +3,7 @@ const { Model } = require('sequelize');
 
 module.exports = (sequelize, DataTypes) => {
   class Validation extends Model {
-    static associate(models) {
-      Validation.belongsTo(models.Request, { foreignKey: 'request_id', targetKey: 'request_id' });
-    }
+    
   }
 
   Validation.init({
@@ -21,3 +19,4 @@ module.exports = (sequelize, DataTypes) => {
 
   return Validation;
 };
+
