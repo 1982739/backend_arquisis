@@ -17,6 +17,7 @@ module.exports = (sequelize, DataTypes) => {
     operation: { type: DataTypes.ENUM('BUY'), allowNull: false, defaultValue: 'BUY' },
     status: { type: DataTypes.ENUM('pending','ACCEPTED','REJECTED','OK','error'), defaultValue: 'pending' },
     reason: { type: DataTypes.STRING, allowNull: true },
+    auth0_id: { type: DataTypes.STRING, allowNull: true },
     timestamp: { type: DataTypes.STRING, allowNull: false }
   }, {
     sequelize,

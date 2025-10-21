@@ -39,6 +39,7 @@ async function manageValidationCallback(req, res) {
       }
       await requestservices.updateRequestStatus(request_id, "ACCEPTED");
       // lógica para descontar dinero
+      await requestservices.chargeUserForRequest(request_info.user_id, property.price);
       console.log(`La solicitud ${request_id} ha sido aceptada`);
     }
 
