@@ -7,6 +7,7 @@ const propertyRoutes = require("./routes/properties.js");
 const requestRoutes = require("./routes/requests.js");
 const validationRoutes = require("./routes/validations.js");
 const userRoutes = require("./routes/users.js");
+const webpayRoutes = require("./routes/webpay.js");
 dotenv.config();
 
 const app = express();
@@ -21,6 +22,7 @@ app.use('/', propertyRoutes);
 app.use('/', requestRoutes);
 app.use('/', validationRoutes);
 app.use('/', userRoutes);
+app.use('/webpay', webpayRoutes);
 
 //database connection
 orm.sequelize.authenticate()

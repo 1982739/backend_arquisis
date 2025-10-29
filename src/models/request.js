@@ -13,6 +13,7 @@ module.exports = (sequelize, DataTypes) => {
     property_id: { type: DataTypes.INTEGER, allowNull: false },
     group_id: { type: DataTypes.STRING, allowNull: false },
     url: { type: DataTypes.STRING, allowNull: false },
+    deposit_token: { type: DataTypes.STRING, allowNull: true },
     origin: { type: DataTypes.INTEGER, allowNull: false, defaultValue: 0 },
     operation: { type: DataTypes.ENUM('BUY'), allowNull: false, defaultValue: 'BUY' },
     status: { type: DataTypes.ENUM('pending','ACCEPTED','REJECTED','OK','error'), defaultValue: 'pending' },
