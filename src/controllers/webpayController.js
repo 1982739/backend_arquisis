@@ -29,6 +29,18 @@ async function sendToListener(topic, messageData) {
 }
 
 
+async function create_boleta(compra) {
+  try {
+    const response = await axios.post(process.env.BOLETA_LAMBDA_URL, compra, {
+      headers: { "Content-Type": "application/json" },
+    });
+    return response.data;
+  } catch (error) {
+    console.error("❌ Error creando boleta:", error.message);
+    throw error;
+  }
+}
+
 const tx = new WebpayPlus.Transaction(
     new Options(
         process.env.WEBPAY_COMMERCE_CODE,
@@ -121,8 +133,23 @@ const confirmTransaction = async (req, res) => {
                 const property = await propertie.findByPk(request.property_id);
                 if (property && property.visit > 0) {
                     await property.update({ visit: property.visit - 1 });
+                    
+                    //llamar lambda para creaccion de boleta
+                    await create_boleta({
+                        property_name: property.name,
+                        property_url: property.url,
+                        property_address: property.location,
+                        buyer_id: request.auth0_id || "unknown",
+                        group_id: request.group_id,
+                        request_id: request.request_id,
+                        amount: property.price,
+                        purchase_date: new Date().toISOString(),
+                    });
+
                 }
             }
+
+
         } else if (request) {
             await request.update({ status: "REJECTED" });
         }
@@ -133,6 +160,7 @@ const confirmTransaction = async (req, res) => {
             status,
             reason: `WebPay: ${result.status}`,
         });
+        
 
         res.status(200).json({
             success,
