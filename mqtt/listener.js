@@ -30,8 +30,7 @@ client.on("error", (err) => {
 });
 
 client.on("message", async (topic, message) => {
-    
-
+    console.log(`📡 Mensaje MQTT recibido en ${topic}:`, message.toString());
     let data;
     try {
         data = JSON.parse(message.toString());
@@ -39,11 +38,7 @@ client.on("message", async (topic, message) => {
         console.warn("⚠️ Mensaje no es JSON válido:", err.message);
         return;
     }
-    //spam
-    if (data.group_id === "16" || data.group_id === "14" || data.group_id === "grupo-XX" || data.group_id === "12" || data.group_id === "04") {
-        return
-    }
-    console.log(`📡 Mensaje MQTT recibido en ${topic}:`, message.toString());
+    
     switch (topic) {
         case MQTT_INFO_TOPIC:
             console.log("➡️ Procesando mensaje de INFO:", data.url);
@@ -71,11 +66,7 @@ client.on("message", async (topic, message) => {
             }
             break;
         case MQTT_REQUEST_TOPIC:
-            //mientras broker esta colapsado solo procesar grupo 17
-            if (data.group_id !== process.env.GROUP_ID) {
-                return;
-            }
-            console.log("➡️ Procesando mensaje de REQUEST (de otro grupo):", data.request_id);
+        
             if (data.group_id === process.env.GROUP_ID) {
                 console.log("⚠️ Request de este mismo grupo, no se procesa:", data.request_id);
                 return;
@@ -106,7 +97,6 @@ client.on("message", async (topic, message) => {
             }
             break;
         case MQTT_VALIDATION_TOPIC:
-            //mientras broker esta colapsado solo procesar grupo 17
           
             console.log("➡️ Procesando mensaje de VALIDACIÓN:", data.request_id);
 

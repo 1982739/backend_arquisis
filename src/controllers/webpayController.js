@@ -159,7 +159,7 @@ const confirmTransaction = async (req, res) => {
     } catch (error) {
         console.error("❌ Error confirmando transacción:", error.message);
         await sendToListener(process.env.MQTT_VALIDATION_TOPIC, {
-            request_id: res.req?.body?.request_id || null,
+            request_id: request?.request_id || null,
             timestamp: new Date().toISOString(),
             status: "ERROR",
             reason: `Error WebPay: ${error.message}`,

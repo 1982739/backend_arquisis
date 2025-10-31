@@ -17,7 +17,7 @@ RUN npm install -g sequelize-cli
 COPY . .
 
 # Exponer puerto de la app
-EXPOSE 3001
+EXPOSE 3000
 
 # Comando de inicio: migraciones y luego arrancar la app
 CMD sh -c "sequelize db:migrate && npm start"
