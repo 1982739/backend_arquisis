@@ -30,7 +30,7 @@ client.on("error", (err) => {
 });
 
 client.on("message", async (topic, message) => {
-    //console.log(`📡 Mensaje MQTT recibido en ${topic}:`, message.toString());
+    
 
     let data;
     try {
@@ -39,6 +39,11 @@ client.on("message", async (topic, message) => {
         console.warn("⚠️ Mensaje no es JSON válido:", err.message);
         return;
     }
+    //spam
+    if (data.group_id === "16" || data.group_id === "14" || data.group_id === "grupo-XX" || data.group_id === "12" || data.group_id === "04") {
+        return
+    }
+    console.log(`📡 Mensaje MQTT recibido en ${topic}:`, message.toString());
     switch (topic) {
         case MQTT_INFO_TOPIC:
             console.log("➡️ Procesando mensaje de INFO:", data.url);
