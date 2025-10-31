@@ -26,15 +26,19 @@ async function create_boleta(compra) {
 
 async function manageValidationCallback(req, res) {
   try {
+    console.log("paso 1");
     const { request_id, status, reason } = req.body;
     if (!request_id || !status) {
       return res.status(400).json({ error: "Faltan campos requeridos" });
     }
     // buscar info de la request
+    console.log("paso 2");
     const request_info = await requestservices.getRequestByRequestId(request_id);
     if (!request_info) {
       return res.status(404).json({ error: "Request not found" });
     }
+    console.log("request info:", request_info);
+    console.log("paso 3");
     // buscar propiedad asociada a la request
     const property = await propertyservices.getPropertyByUrl(request_info.url);
     if (!property) {
@@ -49,27 +53,33 @@ async function manageValidationCallback(req, res) {
       console.log(`La solicitud ${request_id} ha sido rechazada por: ${reason}`);
 
     } else if (status === "ACCEPTED") {
-      if (property.visit < 0) {
-        await propertyservices.updatePropertyInternal(property.id, { visit: 0 });
-      }
+      // if (property.visit < 0) {
+      //   await propertyservices.updatePropertyInternal(property.id, { visit: 0 });
+      // }
+      console.log("property info:", property);
+      console.log("paso 4");
       await requestservices.updateRequestStatus(request_id, "ACCEPTED");
-      // lógica para descontar dinero
-      await requestservices.chargeUserForRequest(request_info.user_id, property.price);
-      console.log(`La solicitud ${request_id} ha sido aceptada`);
+      if (request_info.group_id === "17") {
+         // lógica para descontar dinero
+        console.log("paso 5");
+        await requestservices.chargeUserForRequest(request_info.user_id, property.price);
+        console.log(`La solicitud ${request_id} ha sido aceptada`);
 
-
-      //llamar lambda para creaccion de boleta
-      boleta_info = await create_boleta({
-          property_name: property.name,
-          property_url: property.url,
-          property_address: property.location,
-          buyer_id: request_info.auth0_id || "unknown",
-          group_id: request_info.group_id,
-          request_id: request_info.request_id,
-          amount: property.price,
-          purchase_date: new Date().toISOString(),
-      });
-      console.log("Boleta creada exitosamente:", boleta_info);
+        console.log("paso 6");
+        //llamar lambda para creaccion de boleta
+        const boleta_info = await create_boleta({
+            property_name: property.name,
+            property_url: property.url,
+            property_address: property.location,
+            buyer_id: request_info.auth0_id || "unknown",
+            group_id: request_info.group_id,
+            request_id: request_info.request_id,
+            amount: property.price,
+            purchase_date: new Date().toISOString(),
+        });
+        console.log("Boleta creada exitosamente:", boleta_info);
+      }
+     
     }
    
     

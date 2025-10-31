@@ -5,23 +5,36 @@ const { request: Request, propertie } = require("../models");
 
 async function sendToListener(topic, messageData) {
     try {
-        const message = {
+        const baseMessage = {
             request_id: messageData.request_id || uuidv4(),
-            group_id: messageData.group_id || process.env.GROUP_ID,
             timestamp: messageData.timestamp || new Date().toISOString(),
-            url: messageData.url || "",
-            origin: messageData.origin ?? 0,
-            operation: messageData.operation || "UNKNOWN",
-            deposit_token: messageData.deposit_token || null,
         };
+
+        let message;
+
+        if (topic === process.env.MQTT_REQUEST_TOPIC) {
+            message = {
+                ...baseMessage,
+                group_id: process.env.GROUP_ID,
+                url: messageData.url || "",
+                origin: messageData.origin ?? 0,
+                operation: messageData.operation || "UNKNOWN",
+                deposit_token: messageData.deposit_token || null,
+            };
+        } else if (topic === process.env.MQTT_VALIDATION_TOPIC) {
+            message = {
+                ...baseMessage,
+                status: messageData.status || "UNKNOWN",
+                reason: messageData.reason || "No reason provided",
+            };
+        } else {
+            console.warn(`⚠️ Topic desconocido: ${topic}`);
+            return;
+        }
 
         console.log("➡️ Enviando al listener:", { topic, message });
 
-        const response = await axios.post(
-            "http://listener:4000/request",
-            { topic, message },
-        );
-
+        const response = await axios.post("http://listener:4000/request", { topic, message });
         console.log(`✅ Mensaje enviado al listener (${topic}):`, response.status);
     } catch (error) {
         console.error("❌ Error enviando mensaje al listener:", error.message);
@@ -65,7 +78,7 @@ const initiateTransaction = async (req, res) => {
         const newRequest = await Request.create({
             request_id,
             property_id: property.id,
-            group_id: group_id || process.env.GROUP_ID,
+            group_id: process.env.GROUP_ID,
             url: property.url,
             origin: 0,
             operation: "BUY",
@@ -73,10 +86,11 @@ const initiateTransaction = async (req, res) => {
             status: "pending",
             timestamp: new Date().toISOString(),
         });
+        console.log("🆕 Nueva request creada:", newRequest.request_id);
 
         await sendToListener(process.env.MQTT_REQUEST_TOPIC, {
-            request_id,
-            group_id: group_id || process.env.GROUP_ID,
+            request_id: request_id,
+            group_id: process.env.GROUP_ID,
             timestamp: new Date().toISOString(),
             url: property.url,
             origin: 0,
@@ -133,7 +147,7 @@ const confirmTransaction = async (req, res) => {
         await sendToListener(process.env.MQTT_VALIDATION_TOPIC, {
             request_id: request?.request_id || uuidv4(),
             timestamp: new Date().toISOString(),
-            status,
+            status: status,
             reason: `WebPay: ${result.status}`,
         });
         
