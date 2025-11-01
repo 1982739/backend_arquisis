@@ -5,16 +5,30 @@ const { request: Request, propertie } = require("../models");
 
 async function sendToListener(topic, messageData) {
     try {
-        const message = {
-            request_id: messageData.request_id || uuidv4(),
-            group_id: messageData.group_id || process.env.GROUP_ID,
+        const baseMessage = {
+            request_id: messageData.request_id,
             timestamp: messageData.timestamp || new Date().toISOString(),
-            url: messageData.url || "",
-            origin: messageData.origin ?? 0,
-            operation: messageData.operation || "UNKNOWN",
-            deposit_token: messageData.deposit_token || null,
         };
-
+        let message;
+        if (topic === process.env.MQTT_REQUEST_TOPIC) {
+            message = {
+                ...baseMessage,
+                group_id: process.env.GROUP_ID,
+                url: messageData.url || "",
+                origin: messageData.origin ?? 0,
+                operation: messageData.operation || "UNKNOWN",
+                deposit_token: messageData.deposit_token || null,
+            };
+        } else if (topic === process.env.MQTT_VALIDATION_TOPIC) {
+            message = {
+                ...baseMessage,
+                status: messageData.status || "UNKNOWN",
+                reason: messageData.reason || "No reason provided",
+            };
+        } else {
+            console.warn(`⚠️ Topic desconocido: ${topic}`);
+            return;
+        }
         console.log("➡️ Enviando al listener:", { topic, message });
 
         const response = await axios.post(
@@ -63,9 +77,9 @@ const initiateTransaction = async (req, res) => {
 
         const request_id = uuidv4();
         const newRequest = await Request.create({
-            request_id,
+            request_id: request_id,
             property_id: property.id,
-            group_id: group_id || process.env.GROUP_ID,
+            group_id: process.env.GROUP_ID,
             url: property.url,
             origin: 0,
             operation: "BUY",
@@ -73,12 +87,13 @@ const initiateTransaction = async (req, res) => {
             status: "pending",
             timestamp: new Date().toISOString(),
         });
+        console.log("📝 Nueva request creada:", newRequest.toJSON());
 
         await sendToListener(process.env.MQTT_REQUEST_TOPIC, {
-            request_id,
-            group_id: group_id || process.env.GROUP_ID,
-            timestamp: new Date().toISOString(),
-            url: property.url,
+            request_id: newRequest.request_id,
+            group_id: process.env.GROUP_ID,
+            timestamp: newRequest.timestamp,
+            url: newRequest.url,
             origin: 0,
             operation: "BUY",
             deposit_token: response.token,
@@ -128,9 +143,9 @@ const confirmTransaction = async (req, res) => {
         }
 
         await sendToListener(process.env.MQTT_VALIDATION_TOPIC, {
-            request_id: request?.request_id || uuidv4(),
+            request_id: request?.request_id,
             timestamp: new Date().toISOString(),
-            status,
+            status: status,
             reason: `WebPay: ${result.status}`,
         });
 
@@ -144,7 +159,7 @@ const confirmTransaction = async (req, res) => {
     } catch (error) {
         console.error("❌ Error confirmando transacción:", error.message);
         await sendToListener(process.env.MQTT_VALIDATION_TOPIC, {
-            request_id: uuidv4(),
+            request_id: request?.request_id || null,
             timestamp: new Date().toISOString(),
             status: "ERROR",
             reason: `Error WebPay: ${error.message}`,
