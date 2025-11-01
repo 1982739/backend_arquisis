@@ -98,59 +98,93 @@ const initiateTransaction = async (req, res) => {
 };
 
 const confirmTransaction = async (req, res) => {
-    try {
-        const { token_ws } = req.body;
-        if (!token_ws) {
-            return res.status(400).json({ success: false, message: "Falta token_ws (posible pago cancelado)" });
-        }
-
-        const result = await tx.commit(token_ws);
-        console.log("💳 Resultado Webpay commit:", result);
-
-        const request = await Request.findOne({ where: { deposit_token: token_ws } });
-        let status = "REJECTED";
-        let success = false;
-
-        if (result.response_code === 0) {
-            success = true;
-            status = "ACCEPTED";
-
-            if (request) {
-                await request.update({ status: "ACCEPTED" });
-
-                const property = await propertie.findByPk(request.property_id);
-                if (property && property.visit > 0) {
-                    await property.update({ visit: property.visit - 1 });
-                }
-            }
-        } else if (request) {
-            await request.update({ status: "REJECTED" });
-        }
-
-        await sendToListener(process.env.MQTT_VALIDATION_TOPIC, {
-            request_id: request?.request_id || uuidv4(),
-            timestamp: new Date().toISOString(),
-            status,
-            reason: `WebPay: ${result.status}`,
-        });
-
-        res.status(200).json({
-            success,
-            status: result.status,
-            response_code: result.response_code,
-            message: success ? "Pago confirmado exitosamente" : "Pago rechazado",
-            details: result,
-        });
-    } catch (error) {
-        console.error("❌ Error confirmando transacción:", error.message);
-        await sendToListener(process.env.MQTT_VALIDATION_TOPIC, {
-            request_id: uuidv4(),
-            timestamp: new Date().toISOString(),
-            status: "ERROR",
-            reason: `Error WebPay: ${error.message}`,
-        });
-        res.status(500).json({ success: false, error: "Error confirmando transacción", details: error.message });
+  try {
+    const { token_ws } = req.body;
+    if (!token_ws) {
+      return res.status(400).json({
+        success: false,
+        message: "Falta token_ws (posible pago cancelado)",
+      });
     }
+
+    // 1️⃣ Confirmar pago con WebPay
+    const result = await tx.commit(token_ws);
+    console.log("💳 Resultado Webpay commit:", result);
+
+    // 2️⃣ Buscar la solicitud correspondiente
+    const request = await Request.findOne({
+      where: { deposit_token: token_ws },
+    });
+
+    let status = "REJECTED";
+    let success = false;
+
+    // 3️⃣ Pago aprobado
+    if (result.response_code === 0) {
+      success = true;
+      status = "ACCEPTED";
+
+      if (request) {
+        await request.update({ status: "ACCEPTED" });
+
+        const property = await propertie.findByPk(request.property_id);
+        if (property && property.visit > 0) {
+          await property.update({ visit: property.visit - 1 });
+        }
+
+        // 🚀 NUEVO: disparar job de recomendación
+        try {
+          console.log(
+            `🚀 Enviando job de recomendación para property ${property.id}, user ${request.group_id}`
+          );
+
+          const jobResponse = await triggerRecommendationJob(
+            property.id,
+            request.group_id
+          );
+
+          console.log("✅ JobMaster respondió:", jobResponse);
+        } catch (err) {
+          console.error("⚠️ Error creando job de recomendación:", err.message);
+        }
+      }
+    } else if (request) {
+      await request.update({ status: "REJECTED" });
+    }
+
+    // 4️⃣ Notificar por MQTT (validación)
+    await sendToListener(process.env.MQTT_VALIDATION_TOPIC, {
+      request_id: request?.request_id || uuidv4(),
+      timestamp: new Date().toISOString(),
+      status,
+      reason: `WebPay: ${result.status}`,
+    });
+
+    // 5️⃣ Responder al frontend
+    res.status(200).json({
+      success,
+      status: result.status,
+      response_code: result.response_code,
+      message: success
+        ? "Pago confirmado exitosamente y recomendaciones en proceso"
+        : "Pago rechazado",
+      details: result,
+    });
+  } catch (error) {
+    console.error("❌ Error confirmando transacción:", error.message);
+    await sendToListener(process.env.MQTT_VALIDATION_TOPIC, {
+      request_id: uuidv4(),
+      timestamp: new Date().toISOString(),
+      status: "ERROR",
+      reason: `Error WebPay: ${error.message}`,
+    });
+
+    res.status(500).json({
+      success: false,
+      error: "Error confirmando transacción",
+      details: error.message,
+    });
+  }
 };
 
 const listTransactions = async (req, res) => {
