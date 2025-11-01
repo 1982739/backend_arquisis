@@ -81,6 +81,7 @@ async function manageValidationCallback(req, res) {
 
         console.log("paso 6");
     //llamar lambda para creaccion de boleta
+        const amount_reservation = property.price * 0.1;
         const boleta_info = await create_boleta({
             property_name: property.name,
             property_url: property.url,
@@ -88,11 +89,13 @@ async function manageValidationCallback(req, res) {
             buyer_id: request_info.auth0_id || "unknown",
             group_id: request_info.group_id,
             request_id: request_info.request_id,
-            amount: property.price,
+            amount: amount_reservation,
             purchase_date: new Date().toISOString(),
         });
         console.log("Boleta creada exitosamente:", boleta_info);
-        
+        if (boleta_info) {
+          await requestservices.updateRequestWithBoletaInfo(request_id, boleta_info);        
+        }
       }
      
     }
