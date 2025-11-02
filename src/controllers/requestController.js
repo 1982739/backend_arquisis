@@ -133,7 +133,8 @@ async function reciveRequest(req, res) {
 
 async function listRequests(req, res) {
     try {
-        const requests = await Request.findAll({ include: propertie });
+        const { sub } = req.auth;
+        const requests = await Request.findAll({ where: { auth0_id: sub }, include: propertie });
         console.log("✅ Listando requests. Total:", requests.length);
         res.json(requests);
     } catch (err) {
