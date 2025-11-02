@@ -13,6 +13,7 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+    dns: 8.8.8.8
     networks:
       - app-network
     restart: unless-stopped
@@ -26,6 +27,7 @@ services:
       - .env
     depends_on:
       - api
+    dns: 8.8.8.8
     networks:
       - app-network
     ports:

@@ -12,4 +12,7 @@ router.get("/users/wallet", checkJwt, userController.getWallet);
 // Recargar wallet
 router.post("/users/wallet/recharge", checkJwt, userController.rechargeWallet);
 
+// Listar usuarios (solo para pruebas)
+router.get("/users", userController.listUsers);
+
 module.exports = router;
