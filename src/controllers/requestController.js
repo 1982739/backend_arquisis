@@ -142,4 +142,26 @@ async function listRequests(req, res) {
     }
 }
 
-module.exports = { createRequest, listRequests, reciveRequest };
+async function getRequestInfoById(req,res) {
+  try {
+    const request = await Request.findOne({
+      where: { request_id: req.params.request_id },
+      include: [
+        {
+          model: propertie,
+          as: 'propertie', // usa el alias correcto de tu asociación
+        },
+      ],
+    });
+    if (!request) {
+      return res.status(404).json({ error: "Request not found" });
+    }
+    res.json(request);
+  } catch (err) {
+    console.error("Error fetching request info:", err);
+    res.status(500).json({ error: "Internal server error" });
+  }
+}
+
+
+module.exports = { createRequest, listRequests, reciveRequest, getRequestInfoById };

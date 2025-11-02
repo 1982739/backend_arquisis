@@ -19,6 +19,7 @@ module.exports = (sequelize, DataTypes) => {
     status: { type: DataTypes.ENUM('pending','ACCEPTED','REJECTED','OK','error'), defaultValue: 'pending' },
     reason: { type: DataTypes.STRING, allowNull: true },
     auth0_id: { type: DataTypes.STRING, allowNull: true },
+    boleta_url: { type: DataTypes.STRING, allowNull: true },
     timestamp: { type: DataTypes.STRING, allowNull: false }
   }, {
     sequelize,

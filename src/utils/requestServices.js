@@ -34,6 +34,25 @@ async function updateRequestStatus(request_id, status) {
     return { error: "Internal server error" };
   }
 }
+async function updateRequestWithBoletaInfo(request_id, boleta_info) {
+   try {
+    const [updated] = await Request.update(
+      { boleta_url: boleta_info.url },
+      { where: { 'request_id': request_id } }
+    );
+    console.log(`Filas modificadas: ${updated}`);
+
+    if (updated === 0) {
+      return { error: "Request not found" };
+    }
+
+    const updatedRequest = await Request.findOne({ where: { request_id } });
+    return updatedRequest.toJSON();
+  } catch (err) {
+    console.error("Error updating request:", err);
+    return { error: "Internal server error" };
+  }
+}
 
 
 async function chargeUserForRequest(user_id, amount) {
@@ -60,4 +79,4 @@ async function chargeUserForRequest(user_id, amount) {
   return newBalance;
 }
 
-module.exports = {requestservices: {getRequestByRequestId, updateRequestStatus, chargeUserForRequest}};
+module.exports = {requestservices: {getRequestByRequestId, updateRequestStatus, chargeUserForRequest, updateRequestWithBoletaInfo}};
