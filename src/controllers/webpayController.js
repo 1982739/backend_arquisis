@@ -76,6 +76,8 @@ const initiateTransaction = async (req, res) => {
         console.log("💰 Webpay respuesta:", response);
 
         const request_id = uuidv4();
+        const { sub } = req.auth;
+
         const newRequest = await Request.create({
             request_id: request_id,
             property_id: property.id,
@@ -85,6 +87,7 @@ const initiateTransaction = async (req, res) => {
             operation: "BUY",
             deposit_token: response.token,
             status: "pending",
+            auth0_id: sub,
             timestamp: new Date().toISOString(),
         });
         console.log("📝 Nueva request creada:", newRequest.toJSON());

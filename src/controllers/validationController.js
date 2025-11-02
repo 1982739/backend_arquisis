@@ -1,4 +1,5 @@
 const { validation: Validation } = require("../models");
+const { User } = require("../models");
 const { requestservices } = require("../utils/requestServices.js");
 const { propertyservices } = require("../utils/propertyServices.js");
 const axios = require("axios");
@@ -27,18 +28,6 @@ async function create_boleta(compra) {
 async function manageValidationCallback(req, res) {
   try {
 
-    //llamar lambda para creaccion de boleta
-        // const boleta_info = await create_boleta({
-        //     property_name: "propiedad de prueba",
-        //     property_url: "http://propiedad-de-prueba.com",
-        //     property_address: "Dirección de prueba",
-        //     buyer_id: "buyer-123",
-        //     group_id: "group-123",
-        //     request_id: "request-123",
-        //     amount: 100,
-        //     purchase_date: new Date().toISOString(),
-        // });
-        // console.log("Boleta creada exitosamente:", boleta_info);
     console.log("paso 1");
     const { request_id, status, reason } = req.body;
     if (!request_id || !status) {
@@ -82,11 +71,14 @@ async function manageValidationCallback(req, res) {
         console.log("paso 6");
     //llamar lambda para creaccion de boleta
         const amount_reservation = property.price * 0.1;
+        //buscar email usuario comprador
+        
+        const user = await User.findOne({ where: { auth0_id: request_info.auth0_id } });
         const boleta_info = await create_boleta({
             property_name: property.name,
             property_url: property.url,
             property_address: property.location,
-            buyer_id: request_info.auth0_id || "unknown",
+            buyer_id: user.email || "unknown",
             group_id: request_info.group_id,
             request_id: request_info.request_id,
             amount: amount_reservation,
