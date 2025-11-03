@@ -13,24 +13,25 @@ on:
 permissions:
   contents: read
 
-env:
-  AWS_REGION: us-east-1
-  ACCOUNT_ID: 396961015588
-  ECR_REPO_API: proyecto-arqui-api
-  ECR_REPO_LISTENER: proyecto-arqui-listener
-
 jobs:
   build:
     runs-on: ubuntu-latest
+
+    env:
+      AWS_REGION: us-east-1
+      ACCOUNT_ID: 396961015588
+      ECR_REPO_API: proyecto-arqui-api
+      ECR_REPO_LISTENER: proyecto-arqui-listener
+
     strategy:
       matrix:
         service:
           - name: api
             dockerfile: Dockerfile.api
-            ecr_repo: ${{ env.ECR_REPO_API }}
+            ecr_repo: proyecto-arqui-api
           - name: listener
             dockerfile: Dockerfile.listener
-            ecr_repo: ${{ env.ECR_REPO_LISTENER }}
+            ecr_repo: proyecto-arqui-listener
       fail-fast: false
 
     steps:
