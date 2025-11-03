@@ -64,7 +64,6 @@ jobs:
           docker tag "$REPO:$GIT_SHA" "$REPO:latest"
 
       - name: Push image to ECR
-        if: github.event_name == 'push'
         run: |
           GIT_SHA=${GITHUB_SHA::7}
           REPO="$ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/${{ matrix.service.ecr_repo }}"
