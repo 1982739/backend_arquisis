@@ -56,3 +56,18 @@ La base de datos se genera sola con el docker-compose; no es necesario hacerla a
 - `npm run dev`: Modo desarrollo con nodemon.
 - `npm run migrate`: Ejecuta las migraciones de la base de datos.
 - `npm test`: Ejecuta los tests.
+
+## 📝 Workflow CI/CD
+
+En la ruta .github/workflows/backend-ci.yml se encuentra el archivo con las instrucciones del workflow de CI para el backend.
+
+El propósito del workflow es automatizar la creación de imágenes de Docker para los servicios del backend (la API y el listener) y luego las sube a sus repositorios de ECR públicos. Para esta entrega no está implementado el deploy, pero a futuro también permitirá que el EC2 leerá las imágenes recién publicadas para actualizarse con el nuevo build automáticamente. El testeo se ejecuta en cada pull request a main o develop, y la subida de las imágenes se ejecuta en cada push a main.
+
+Utilizando Github Actions, acciones de AWS y comandos de la consola, se hace lo siguiente:
+1. Checkout del commit en cuestión.
+2. Se inicia Node.
+3. Se instalan todas las dependencias, leídas del package.json.
+4. Configuración de credenciales de AWS, tomadas de los Secrets del repositorio. Permite acceder a los ECR.
+5. Login a AWS para usar las ECR públicas.  
+6. Build de la imagen. Se ejecuta el build de Docker.
+7. Se pushea la imagen al ECR. Este paso solo se realiza en los pushes al branch (específicamente main), para no hacerlo en cada pull request.

@@ -65,6 +65,7 @@ jobs:
           docker tag "$REPO:$GIT_SHA" "$REPO:latest"
 
       - name: Push image to ECR Public
+        if: github.event_name == 'push'
         run: |
           GIT_SHA=${GITHUB_SHA::7}
           REPO="$ECR_PUBLIC_REGISTRY/$ECR_ALIAS/${{ matrix.service.ecr_repo }}"
