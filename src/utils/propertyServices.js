@@ -22,4 +22,13 @@ async function getPropertyById(id) {
   }
   return property;
 }
-module.exports = {propertyservices: {updatePropertyInternal, findPropertyById, getPropertyById}}
+
+async function getPropertyByUrl(url) {
+  const property = await propertie.findOne({ where: { url } });
+  if (!property) {
+    return null; // retornamos null si no existe
+  }
+  return property;
+}
+
+module.exports = {propertyservices: {updatePropertyInternal, findPropertyById, getPropertyById, getPropertyByUrl}}

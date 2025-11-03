@@ -5,16 +5,30 @@ const { request: Request, propertie } = require("../models");
 
 async function sendToListener(topic, messageData) {
     try {
-        const message = {
-            request_id: messageData.request_id || uuidv4(),
-            group_id: messageData.group_id || process.env.GROUP_ID,
+        const baseMessage = {
+            request_id: messageData.request_id,
             timestamp: messageData.timestamp || new Date().toISOString(),
-            url: messageData.url || "",
-            origin: messageData.origin ?? 0,
-            operation: messageData.operation || "UNKNOWN",
-            deposit_token: messageData.deposit_token || null,
         };
-
+        let message;
+        if (topic === process.env.MQTT_REQUEST_TOPIC) {
+            message = {
+                ...baseMessage,
+                group_id: process.env.GROUP_ID,
+                url: messageData.url || "",
+                origin: messageData.origin ?? 0,
+                operation: messageData.operation || "UNKNOWN",
+                deposit_token: messageData.deposit_token || null,
+            };
+        } else if (topic === process.env.MQTT_VALIDATION_TOPIC) {
+            message = {
+                ...baseMessage,
+                status: messageData.status || "UNKNOWN",
+                reason: messageData.reason || "No reason provided",
+            };
+        } else {
+            console.warn(`⚠️ Topic desconocido: ${topic}`);
+            return;
+        }
         console.log("➡️ Enviando al listener:", { topic, message });
 
         const response = await axios.post(
@@ -62,23 +76,27 @@ const initiateTransaction = async (req, res) => {
         console.log("💰 Webpay respuesta:", response);
 
         const request_id = uuidv4();
+        const { sub } = req.auth;
+
         const newRequest = await Request.create({
-            request_id,
+            request_id: request_id,
             property_id: property.id,
-            group_id: group_id || process.env.GROUP_ID,
+            group_id: process.env.GROUP_ID,
             url: property.url,
             origin: 0,
             operation: "BUY",
             deposit_token: response.token,
             status: "pending",
+            auth0_id: sub,
             timestamp: new Date().toISOString(),
         });
+        console.log("📝 Nueva request creada:", newRequest.toJSON());
 
         await sendToListener(process.env.MQTT_REQUEST_TOPIC, {
-            request_id,
-            group_id: group_id || process.env.GROUP_ID,
-            timestamp: new Date().toISOString(),
-            url: property.url,
+            request_id: newRequest.request_id,
+            group_id: process.env.GROUP_ID,
+            timestamp: newRequest.timestamp,
+            url: newRequest.url,
             origin: 0,
             operation: "BUY",
             deposit_token: response.token,
