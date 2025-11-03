@@ -3,12 +3,10 @@ name: backend-ci
 on:
   push:
     branches: [main]
-    paths:
-      - "**"
+    paths: ["**"]
   pull_request:
     branches: [main, develop]
-    paths:
-      - "**"
+    paths: ["**"]
 
 permissions:
   contents: read
@@ -17,12 +15,14 @@ jobs:
   build:
     runs-on: ubuntu-latest
 
-    # pucha
     env:
       AWS_REGION: us-east-1
-      ACCOUNT_ID: 396961015588
+
+      ECR_ALIAS: v4c6e9b3
       ECR_REPO_API: proyecto-arqui-api
       ECR_REPO_LISTENER: proyecto-arqui-listener
+
+      ECR_PUBLIC_REGISTRY: public.ecr.aws
 
     strategy:
       matrix:
@@ -51,21 +51,23 @@ jobs:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
 
-      - name: Login to Amazon ECR
+      - name: Login to Amazon ECR Public
         run: |
-          aws ecr get-login-password --region $AWS_REGION \
-            | docker login --username AWS --password-stdin $ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com
+          aws ecr-public get-login-password --region $AWS_REGION \
+            | docker login --username AWS --password-stdin $ECR_PUBLIC_REGISTRY
 
       - name: Build image
         run: |
           GIT_SHA=${GITHUB_SHA::7}
-          REPO="$ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/${{ matrix.service.ecr_repo }}"
+          REPO="$ECR_PUBLIC_REGISTRY/$ECR_ALIAS/${{ matrix.service.ecr_repo }}"
+          echo "Building: $REPO:$GIT_SHA"
           docker build -f ${{ matrix.service.dockerfile }} -t "$REPO:$GIT_SHA" .
           docker tag "$REPO:$GIT_SHA" "$REPO:latest"
 
-      - name: Push image to ECR
+      - name: Push image to ECR Public
         run: |
           GIT_SHA=${GITHUB_SHA::7}
-          REPO="$ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/${{ matrix.service.ecr_repo }}"
+          REPO="$ECR_PUBLIC_REGISTRY/$ECR_ALIAS/${{ matrix.service.ecr_repo }}"
+          echo "Pushing: $REPO:$GIT_SHA and $REPO:latest"
           docker push "$REPO:$GIT_SHA"
           docker push "$REPO:latest"
