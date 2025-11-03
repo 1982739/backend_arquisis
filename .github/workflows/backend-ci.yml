@@ -1,0 +1,70 @@
+name: backend-ci
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "**"
+  pull_request:
+    branches: [main]
+    paths:
+      - "**"
+
+permissions:
+  contents: read
+
+env:
+  AWS_REGION: us-east-1
+  ACCOUNT_ID: 396961015588
+  ECR_REPO_API: proyecto-arqui-api
+  ECR_REPO_LISTENER: proyecto-arqui-listener
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        service:
+          - name: api
+            dockerfile: Dockerfile.api
+            ecr_repo: ${{ env.ECR_REPO_API }}
+          - name: listener
+            dockerfile: Dockerfile.listener
+            ecr_repo: ${{ env.ECR_REPO_LISTENER }}
+      fail-fast: false
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Install deps (smoke)
+        run: npm ci
+
+      - name: Configure AWS credentials (keys)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-region: ${{ env.AWS_REGION }}
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+
+      - name: Login to Amazon ECR
+        run: |
+          aws ecr get-login-password --region $AWS_REGION \
+            | docker login --username AWS --password-stdin $ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com
+
+      - name: Build image
+        run: |
+          GIT_SHA=${GITHUB_SHA::7}
+          REPO="$ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/${{ matrix.service.ecr_repo }}"
+          docker build -f ${{ matrix.service.dockerfile }} -t "$REPO:$GIT_SHA" .
+          docker tag "$REPO:$GIT_SHA" "$REPO:latest"
+
+      - name: Push image to ECR
+        if: github.event_name == 'push'
+        run: |
+          GIT_SHA=${GITHUB_SHA::7}
+          REPO="$ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/${{ matrix.service.ecr_repo }}"
+          docker push "$REPO:$GIT_SHA"
+          docker push "$REPO:latest"
