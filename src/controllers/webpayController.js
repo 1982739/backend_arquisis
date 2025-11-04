@@ -189,7 +189,7 @@ const confirmTransaction = async (req, res) => {
         ? "Pago confirmado exitosamente y recomendaciones en proceso"
         : "Pago rechazado",
       details: result,
-      recommendation: jobResponse ? "Job de recomendación disparado" : "No se creó recomendación",
+      recommendation: jobResponse,
     });
   } catch (error) {
     console.error("❌ Error confirmando transacción:", error.message);
