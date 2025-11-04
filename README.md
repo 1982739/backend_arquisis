@@ -1,9 +1,8 @@
 # Backend E1
-- link de la página: https:arquijavi.me
+- link de la página: https://arquijavi.me
 
 ## Diagrama UML
-![Diagrama UML](./UML.jpg)
-
+![Diagrama UML](./UML.png)
 
 ## 🚀 Tecnologías
 - Node.js, Express
@@ -56,6 +55,15 @@ La base de datos se genera sola con el docker-compose; no es necesario hacerla a
 - `npm run dev`: Modo desarrollo con nodemon.
 - `npm run migrate`: Ejecuta las migraciones de la base de datos.
 - `npm test`: Ejecuta los tests.
+
+## 📝 WebPay
+
+Para conectarse a WebPay, el backend usa un WEBPAY_COMMERCE_CODE y un WEBPAY_API_KEY. Similar a auth0, se determina una URL de retorno después de un pago exitoso.
+
+Desde el backend, el flujo de WebPay para el pago de las visitas comienza con el llamado de POST a /webpay/create. Aquí se recoge el precio de la propiedad que se desea comprar, se genera una transacción de WebPay y se genera una Request. Se notifica al listener en el canal /properties/request.
+
+Aquí el usuario ingresa su número de tarjeta, RUT, etc. Una vez está terminada la transacción, WebPay entrega un token_ws al frontend, que luego es enviado al backend para confirmar la compra. Acá se hace commit de la transacción y se registra el Request como aprobado, rechazado o anulado según el response code del resultado del commit. Además, a partir de la información de la propiedad, se le pide al JobMaster una nueva tarea para la cola, generar las recomendaciones de nuevas propiedades.
+Hecho esto, se notifica al listener por /properties/validation el resultado de la transacción, sea cual sea. Finalmente, se le devuelve la información sobre el resultado de la transacción al frontend. 
 
 ## 📝 Workflow CI/CD
 
