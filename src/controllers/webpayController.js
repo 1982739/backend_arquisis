@@ -2,7 +2,7 @@ const { v4: uuidv4 } = require("uuid");
 const axios = require("axios");
 const { WebpayPlus, Options, Environment } = require('transbank-sdk');
 const { request: Request, propertie } = require("../models");
-const { triggerRecommendationJob } = require("../jobmasterClient"); // Import your existing client
+const { triggerRecommendationJob } = require("../utils/jobmasterClient"); // Import your existing client
 
 async function sendToListener(topic, messageData) {
     try {
