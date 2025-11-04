@@ -36,3 +36,16 @@ app.get("/", (req, res) => {
 app.listen(PORT, () => {
   console.log(`Servidor escuchando en http://localhost:${PORT}`);
 });
+
+// Middleware de validación
+app.use((req, res, next) => {
+  const apiGatewayToken = req.headers['x-api-gateway-token'];
+
+  if (apiGatewayToken !== process.env.API_GATEWAY_SECRET) {
+    return res.status(403).json({ 
+      error: 'Forbidden',
+      message: 'Direct access not allowed' 
+    });
+  }
+  next();
+});
