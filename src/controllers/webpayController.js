@@ -137,6 +137,7 @@ const confirmTransaction = async (req, res) => {
 
     let status = "REJECTED";
     let success = false;
+    let jobResponse = null;
 
     // 3️⃣ Pago aprobado
     if (result.response_code === 0) {
@@ -157,7 +158,7 @@ const confirmTransaction = async (req, res) => {
             `🚀 Enviando job de recomendación para property ${property.id}, user ${request.group_id}`
           );
 
-          const jobResponse = await triggerRecommendationJob(
+          jobResponse = await triggerRecommendationJob(
             property.id,
             request.group_id
           );
