@@ -1,6 +1,7 @@
 const {propertie} = require("../models");
 const {Op} = require("sequelize");
 
+
 async function getProperties(req, res)  {
     try{
         const page = parseInt(req.query.page) || 1;
@@ -9,6 +10,7 @@ async function getProperties(req, res)  {
 
         const {price, location, date, url} = req.query;
         const filters = {};
+        const apiGatewayToken = req.headers['x-api-gateway-token'];
         if (apiGatewayToken !== process.env.API_GATEWAY_SECRET) {
           return res.status(403).json({ 
             error: 'Forbidden',
@@ -47,6 +49,7 @@ async function getProperties(req, res)  {
 async function getPropertyById(req, res) {
     try{
         const property = await propertie.findByPk(req.params.id);
+        const apiGatewayToken = req.headers['x-api-gateway-token'];
         if (apiGatewayToken !== process.env.API_GATEWAY_SECRET) {
           return res.status(403).json({ 
             error: 'Forbidden',
