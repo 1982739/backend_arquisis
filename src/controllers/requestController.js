@@ -104,7 +104,11 @@ async function reciveRequest(req, res) {
         }
         
         console.log("✅ Propiedad de la request encontrada en DB:", property.id);
-
+        const existing = await Request.findByPk(request_id);
+        if (existing) {
+            console.log("⚠️ Request ya existe (${request_id}), se ignora duplicado.");
+            return res.status(200).json({ message: "Request ya registrada", request_id });
+        }
         const newRequest = await Request.create({
             request_id,
             property_id: property.id,

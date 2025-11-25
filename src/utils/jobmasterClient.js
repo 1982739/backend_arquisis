@@ -1,18 +1,14 @@
 const axios = require('axios');
-const authService = require('../../recomendation_workers/worker/src/utils/authService');
 
 const JOBMASTER_URL = process.env.JOBMASTER_URL || 'http://localhost:3001';
 
-async function triggerRecommendationJob(propertyId, userId, filters = {}, algorithm = 'basic') {
+async function triggerRecommendationJob(propertyId, userId, filters = {}) {
   try {
-    // 🔑 Obtener token Auth0 desde tu servicio
-    const token = await authService.getToken();
 
     // 🚀 Enviar solicitud al JobMaster
     const response = await axios.post(
       `${JOBMASTER_URL}/job`,
-      { propertyId, userId, filters, algorithm },
-      { headers: { Authorization: `Bearer ${token}` } }
+      { propertyId, userId, filters },
     );
 
     console.log('✅ Job de recomendación creado:', response.data);

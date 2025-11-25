@@ -1,4 +1,4 @@
-# Backend E1
+# Backend E2
 - link de la página: https://arquijavi.me
 
 ## Diagrama UML
@@ -79,3 +79,12 @@ Utilizando Github Actions, acciones de AWS y comandos de la consola, se hace lo 
 5. Login a AWS para usar las ECR públicas.  
 6. Build de la imagen. Se ejecuta el build de Docker.
 7. Se pushea la imagen al ECR. Este paso solo se realiza en los pushes al branch (específicamente main), para no hacerlo en cada pull request.
+
+
+## Serverless
+
+1. En un archivo serverless.yml declarar permisos "s3:PutObject"- "s3:GetObject" para pode subir y ver las boletas en la S3
+2. en archivo serverless.js en procider indicar región de AWS y nombre del BUCKET 
+3. archivo boletahandler.js se encarga de generar la boleta mediante generateInvoice.js y de subir la boleta mediante uploadToS3.js
+4. `serverless deploy` Para realizar deploy de la aplicación a la lambda
+5. Hacer un POST HTTP al url de la lambda para probar su uso

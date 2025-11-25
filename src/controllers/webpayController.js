@@ -2,7 +2,7 @@ const { v4: uuidv4 } = require("uuid");
 const axios = require("axios");
 const { WebpayPlus, Options, Environment } = require('transbank-sdk');
 const { request: Request, propertie } = require("../models");
-const { triggerRecommendationJob } = require("../jobmasterClient"); // Import your existing client
+const { triggerRecommendationJob } = require("../utils/jobmasterClient"); // Import your existing client
 
 async function sendToListener(topic, messageData) {
     try {
@@ -137,6 +137,7 @@ const confirmTransaction = async (req, res) => {
 
     let status = "REJECTED";
     let success = false;
+    let jobResponse = null;
 
     // 3️⃣ Pago aprobado
     if (result.response_code === 0) {
@@ -157,7 +158,7 @@ const confirmTransaction = async (req, res) => {
             `🚀 Enviando job de recomendación para property ${property.id}, user ${request.group_id}`
           );
 
-          const jobResponse = await triggerRecommendationJob(
+          jobResponse = await triggerRecommendationJob(
             property.id,
             request.group_id
           );
@@ -188,7 +189,7 @@ const confirmTransaction = async (req, res) => {
         ? "Pago confirmado exitosamente y recomendaciones en proceso"
         : "Pago rechazado",
       details: result,
-      recommendation: jobResponse ? "Job de recomendación disparado" : "No se creó recomendación",
+      recommendation: jobResponse,
     });
   } catch (error) {
     console.error("❌ Error confirmando transacción:", error.message);
