@@ -8,6 +8,8 @@ const requestRoutes = require("./routes/requests.js");
 const validationRoutes = require("./routes/validations.js");
 const userRoutes = require("./routes/users.js");
 const webpayRoutes = require("./routes/webpay.js");
+const auctionRoutes = require("./routes/auctions.js");
+const proposalRoutes = require("./routes/proposal.js");
 dotenv.config();
 
 const app = express();
@@ -23,6 +25,8 @@ app.use('/', requestRoutes);
 app.use('/', validationRoutes);
 app.use('/', userRoutes);
 app.use('/webpay', webpayRoutes);
+app.use('/auctions', auctionRoutes);
+app.use('/proposals', proposalRoutes);
 
 //database connection
 orm.sequelize.authenticate()
