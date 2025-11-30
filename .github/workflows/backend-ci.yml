@@ -3,36 +3,16 @@ name: backend-ci
 on:
   push:
     branches: [main]
-    paths: ["**"]
   pull_request:
     branches: [main, develop]
-    paths: ["**"]
 
 permissions:
   contents: read
 
 jobs:
-  build:
+  ci:
     runs-on: ubuntu-latest
-
-    env:
-      AWS_REGION: us-east-1
-      ECR_ALIAS: v4c6e9b3
-      ECR_REPO_API: proyecto-arqui-api
-      ECR_REPO_LISTENER: proyecto-arqui-listener
-      ECR_PUBLIC_REGISTRY: public.ecr.aws
-
-    strategy:
-      matrix:
-        service:
-          - name: api
-            dockerfile: Dockerfile.api
-            ecr_repo: proyecto-arqui-api
-          - name: listener
-            dockerfile: Dockerfile.listener
-            ecr_repo: proyecto-arqui-listener
-      fail-fast: false
-
+    
     steps:
       - uses: actions/checkout@v4
 
@@ -43,39 +23,8 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      # 🔹 RNF07: LINTER
       - name: Run backend linter
         run: npm run lint
 
-      # 🔹 RNF07: TESTS UNITARIOS
       - name: Run backend tests
         run: npm test
-
-      # ⬆️ Si falla → NO se despliega nada
-
-      - name: Configure AWS credentials (keys)
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          aws-region: ${{ env.AWS_REGION }}
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-
-      - name: Login to Amazon ECR Public
-        run: |
-          aws ecr-public get-login-password --region $AWS_REGION \
-            | docker login --username AWS --password-stdin $ECR_PUBLIC_REGISTRY
-
-      - name: Build image
-        run: |
-          GIT_SHA=${GITHUB_SHA::7}
-          REPO="$ECR_PUBLIC_REGISTRY/$ECR_ALIAS/${{ matrix.service.ecr_repo }}"
-          docker build -f ${{ matrix.service.dockerfile }} -t "$REPO:$GIT_SHA" .
-          docker tag "$REPO:$GIT_SHA" "$REPO:latest"
-
-      - name: Push image to ECR Public
-        if: github.event_name == 'push'
-        run: |
-          GIT_SHA=${GITHUB_SHA::7}
-          REPO="$ECR_PUBLIC_REGISTRY/$ECR_ALIAS/${{ matrix.service.ecr_repo }}"
-          docker push "$REPO:$GIT_SHA"
-          docker push "$REPO:latest"
