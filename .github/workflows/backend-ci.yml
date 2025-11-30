@@ -17,11 +17,9 @@ jobs:
 
     env:
       AWS_REGION: us-east-1
-
       ECR_ALIAS: v4c6e9b3
       ECR_REPO_API: proyecto-arqui-api
       ECR_REPO_LISTENER: proyecto-arqui-listener
-
       ECR_PUBLIC_REGISTRY: public.ecr.aws
 
     strategy:
@@ -41,8 +39,19 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 20
-      - name: Install deps (smoke)
+
+      - name: Install dependencies
         run: npm ci
+
+      # 🔹 RNF07: LINTER
+      - name: Run backend linter
+        run: npm run lint
+
+      # 🔹 RNF07: TESTS UNITARIOS
+      - name: Run backend tests
+        run: npm test
+
+      # ⬆️ Si falla → NO se despliega nada
 
       - name: Configure AWS credentials (keys)
         uses: aws-actions/configure-aws-credentials@v4
@@ -60,7 +69,6 @@ jobs:
         run: |
           GIT_SHA=${GITHUB_SHA::7}
           REPO="$ECR_PUBLIC_REGISTRY/$ECR_ALIAS/${{ matrix.service.ecr_repo }}"
-          echo "Building: $REPO:$GIT_SHA"
           docker build -f ${{ matrix.service.dockerfile }} -t "$REPO:$GIT_SHA" .
           docker tag "$REPO:$GIT_SHA" "$REPO:latest"
 
@@ -69,6 +77,5 @@ jobs:
         run: |
           GIT_SHA=${GITHUB_SHA::7}
           REPO="$ECR_PUBLIC_REGISTRY/$ECR_ALIAS/${{ matrix.service.ecr_repo }}"
-          echo "Pushing: $REPO:$GIT_SHA and $REPO:latest"
           docker push "$REPO:$GIT_SHA"
           docker push "$REPO:latest"
