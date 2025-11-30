@@ -1,13 +1,13 @@
 const express = require("express");
 const dotenv = require("dotenv");
 const cors = require("cors");
-const {Sequelize} = require("sequelize");
 const orm = require("./models/index.js");
 const propertyRoutes = require("./routes/properties.js");
 const requestRoutes = require("./routes/requests.js");
 const validationRoutes = require("./routes/validations.js");
 const userRoutes = require("./routes/users.js");
 const webpayRoutes = require("./routes/webpay.js");
+
 dotenv.config();
 
 const app = express();
@@ -15,24 +15,28 @@ app.use(cors());
 
 app.locals.orm = orm;
 
-const PORT = process.env.PORT || 3000;
-
+// Middlewares
 app.use(express.json());
-app.use('/', propertyRoutes);
-app.use('/', requestRoutes);
-app.use('/', validationRoutes);
-app.use('/', userRoutes);
-app.use('/webpay', webpayRoutes);
 
-//database connection
-orm.sequelize.authenticate()
-  .then(() => console.log('Database connected!'))
-  .catch(err => console.error('Error connecting to database:', err));
+// Rutas
+app.use("/", propertyRoutes);
+app.use("/", requestRoutes);
+app.use("/", validationRoutes);
+app.use("/", userRoutes);
+app.use("/webpay", webpayRoutes);
 
+// Ruta para pruebas
 app.get("/", (req, res) => {
-  res.send("Servidor funcionando ");
+  res.status(200).json({ ok: true });
 });
 
-app.listen(PORT, () => {
-  console.log(`Servidor escuchando en http://localhost:${PORT}`);
-});
+// Conexión a la base de datos
+// Conexión a la base de datos SOLO si no estamos en tests
+if (process.env.NODE_ENV !== "test") {
+  orm.sequelize
+    .authenticate()
+    .then(() => console.log("Database connected!"))
+    .catch((err) => console.error("Error connecting to database:", err));
+}
+// Exporta app SIN iniciar servidor
+module.exports = app;
