@@ -7,7 +7,8 @@ const requestRoutes = require("./routes/requests.js");
 const validationRoutes = require("./routes/validations.js");
 const userRoutes = require("./routes/users.js");
 const webpayRoutes = require("./routes/webpay.js");
-
+const auctionRoutes = require("./routes/auctions.js");
+const proposalRoutes = require("./routes/proposal.js");
 dotenv.config();
 
 const app = express();
@@ -17,13 +18,14 @@ app.locals.orm = orm;
 
 // Middlewares
 app.use(express.json());
+app.use('/', propertyRoutes);
+app.use('/', requestRoutes);
+app.use('/', validationRoutes);
+app.use('/', userRoutes);
+app.use('/webpay', webpayRoutes);
+app.use('/auctions', auctionRoutes);
+app.use('/proposals', proposalRoutes);
 
-// Rutas
-app.use("/", propertyRoutes);
-app.use("/", requestRoutes);
-app.use("/", validationRoutes);
-app.use("/", userRoutes);
-app.use("/webpay", webpayRoutes);
 
 // Ruta para pruebas
 app.get("/", (req, res) => {
