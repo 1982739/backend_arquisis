@@ -3,6 +3,7 @@ const { User } = require("../models");
 const { requestservices } = require("../utils/requestServices.js");
 const { propertyservices } = require("../utils/propertyServices.js");
 const axios = require("axios");
+const { sendEmail } = require("../utils/emailService.js");
 async function listValidations(req, res) {
   try {
     const validations = await Validation.findAll();
@@ -87,6 +88,14 @@ async function manageValidationCallback(req, res) {
         console.log("Boleta creada exitosamente:", boleta_info);
         if (boleta_info) {
           await requestservices.updateRequestWithBoletaInfo(request_id, boleta_info);        
+        }
+        if (user && user.email) {
+          const subject = "🎉 Pago Confirmado: Reserva de Propiedad Aceptada";
+          const body = `Estimado(a) usuario(a),\n\nSu pago para la reserva de la propiedad "${property.name}" (${property.location}) ha sido **confirmado y aceptado**.\n\nDetalles de la reserva:\n- Solicitud ID: ${request_id}\n- Monto de Reserva: ${amount_reservation}\n- Boleta ID: ${boleta_info ? boleta_info.boleta_id : 'Pendiente'}\n\nGracias por su compra.`;
+          await sendEmail(user.email, subject, body);
+          console.log(`📧 Notificación de aceptación enviada a ${user.email}`);
+        } else {
+          console.warn(`⚠️ No se pudo enviar el correo al usuario para la request ${request_id} (Usuario o email no encontrado)`);
         }
       }
      

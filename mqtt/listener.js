@@ -3,8 +3,7 @@ const mqtt = require("mqtt");
 const axios = require("axios");
 require("dotenv").config();
 
-const { MQTT_URL, MQTT_USER, MQTT_PASS, MQTT_INFO_TOPIC, MQTT_VALIDATION_TOPIC, MQTT_REQUEST_TOPIC } = process.env;
-
+const { MQTT_URL, MQTT_USER, MQTT_PASS, MQTT_INFO_TOPIC, MQTT_VALIDATION_TOPIC, MQTT_REQUEST_TOPIC, MQTT_AUCTIONS_TOPIC } = process.env;
 const options = {
     username: MQTT_USER,
     password: MQTT_PASS,
@@ -16,11 +15,11 @@ const client = mqtt.connect(MQTT_URL, options);
 
 client.on("connect", () => {
     console.log("✅ Conectado al broker MQTT");
-    client.subscribe([MQTT_INFO_TOPIC, MQTT_VALIDATION_TOPIC, MQTT_REQUEST_TOPIC], (err) => {
+    client.subscribe([MQTT_INFO_TOPIC, MQTT_VALIDATION_TOPIC, MQTT_REQUEST_TOPIC, MQTT_AUCTIONS_TOPIC], (err) => {
         if (err) {
             console.error("❌ Error al suscribirse:", err);
         } else {
-            console.log(`✅ Suscrito a los topics: ${MQTT_INFO_TOPIC}, ${MQTT_VALIDATION_TOPIC}, ${MQTT_REQUEST_TOPIC}`);
+            console.log(`✅ Suscrito a los topics: ${MQTT_INFO_TOPIC}, ${MQTT_VALIDATION_TOPIC}, ${MQTT_REQUEST_TOPIC}, ${MQTT_AUCTIONS_TOPIC}`);
         }
     });
 });
@@ -116,6 +115,20 @@ client.on("message", async (topic, message) => {
                     console.error("❌ No hubo respuesta del servidor de validación:", err.message);
                 } else {
                     console.error("❌ Error inesperado en validación:", err.message);
+                }
+            }
+            break;
+        case MQTT_AUCTIONS_TOPIC:
+            console.log("➡️ Procesando mensaje de SUBASTAS:", data.action);
+            try {
+                const API_URL = process.env.API_URL || "http://api:3000";
+                await axios.post(`${API_URL}/auctions/receive`, data);
+                console.log("✅ Datos de subasta enviados al API correctamente");
+            } catch (err) {
+                if (err.response) {
+                    console.error("❌ API rechazó los datos de subasta:", err.response.status, err.response.data);
+                } else {
+                    console.error("❌ Error contactando al API para subasta:", err.message);
                 }
             }
             break;
