@@ -20,4 +20,4 @@ COPY . .
 EXPOSE 3000
 
 # Comando de inicio: migraciones y luego arrancar la app
-CMD sh -c "sequelize db:migrate && npm start"
+CMD sh -c "sequelize db:migrate && node -r newrelic ./src/app.js"
