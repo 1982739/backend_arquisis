@@ -11,7 +11,12 @@ async function getProperties(req, res) {
         const { price, location, date, url } = req.query;
         const filters = {};
 
-        if (price) filters.price = { [Op.lte]: price };
+        if (price) {
+            const priceNum = parseFloat(price);
+            if (!isNaN(priceNum)) {
+                filters.price = { [Op.lte]: priceNum };
+            }
+        }
         if (location) filters.location = { [Op.iLike]: `%${location}%` };
         if (url) filters.url = url;
         if (date) {
