@@ -7,7 +7,7 @@ services:
       dockerfile: Dockerfile.api
     container_name: api
     ports:
-      - "3001:3001"
+      - "3000:3000"
     env_file:
       - .env
     depends_on:
@@ -60,4 +60,5 @@ volumes:
 
 networks:
   app-network:
+
     driver: bridge
