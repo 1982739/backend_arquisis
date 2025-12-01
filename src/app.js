@@ -9,6 +9,7 @@ const userRoutes = require("./routes/users.js");
 const webpayRoutes = require("./routes/webpay.js");
 const auctionRoutes = require("./routes/auctions.js");
 const proposalRoutes = require("./routes/proposal.js");
+const resaleRoutes = require("./routes/resale.js");
 dotenv.config();
 
 const app = express();
@@ -25,6 +26,7 @@ app.use('/', userRoutes);
 app.use('/webpay', webpayRoutes);
 app.use('/auctions', auctionRoutes);
 app.use('/proposals', proposalRoutes);
+app.use('/resale', resaleRoutes);
 
 
 // Ruta para pruebas
