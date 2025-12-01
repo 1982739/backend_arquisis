@@ -2,26 +2,27 @@ const { propertie } = require("../models");
 const { Op } = require("sequelize");
 
 
-async function getProperties(req, res) {
-    try {
+async function getProperties(req, res)  {
+    try{
         const page = parseInt(req.query.page) || 1;
         const limit = parseInt(req.query.limit) || 25;
         const offset = (page - 1) * limit;
 
-        const { price, location, date, url } = req.query;
+        const {price, location, date, url} = req.query;
         const filters = {};
-
-        if (price) {
-            const priceNum = parseFloat(price);
-            if (!isNaN(priceNum)) {
-                filters.price = { [Op.lte]: priceNum };
-            }
+        const apiGatewayToken = req.headers['x-api-gateway-token'];
+        if (apiGatewayToken !== process.env.API_GATEWAY_SECRET) {
+          return res.status(403).json({ 
+            error: 'Forbidden',
+            message: 'Direct access not allowed' 
+          });
         }
+        if (price) filters.price = {[Op.lte]: price};
         if (location) filters.location = { [Op.iLike]: `%${location}%` };
         if (url) filters.url = url;
         if (date) {
             const start = new Date(date);
-            start.setUTCHours(0, 0, 0, 0);
+            start.setUTCHours(0, 0, 0, 0); 
 
             const end = new Date(date);
             end.setUTCHours(23, 59, 59, 999);
@@ -39,7 +40,7 @@ async function getProperties(req, res) {
         });
         res.json(properties.rows);
     }
-    catch (err) {
+    catch(err){
         console.error("Error fetching properties:", err);
         res.status(500).json({ error: "Internal server error" });
     }
