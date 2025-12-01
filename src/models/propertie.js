@@ -25,7 +25,11 @@ module.exports = (sequelize, DataTypes) => {
     url: DataTypes.STRING,
     is_project: DataTypes.BOOLEAN,
     timestamp: DataTypes.STRING,
-    visit: DataTypes.INTEGER
+    visit: DataTypes.INTEGER,
+    quantity: {
+      type: DataTypes.INTEGER,
+      defaultValue: 0
+    }
   }, {
     sequelize,
     modelName: 'propertie',

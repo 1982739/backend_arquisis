@@ -1,0 +1,68 @@
+name: backend-cd
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    env:
+      AWS_REGION: us-east-1
+      ECR_ALIAS: v4c6e9b3
+      ECR_PUBLIC_REGISTRY: public.ecr.aws
+
+    strategy:
+      matrix:
+        service:
+          - name: api
+            dockerfile: Dockerfile.api
+            ecr_repo: proyecto-arqui-api
+          - name: listener
+            dockerfile: Dockerfile.listener
+            ecr_repo: proyecto-arqui-listener
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Extract version
+        id: version
+        run: echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-region: ${{ env.AWS_REGION }}
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+
+      - name: Login to Amazon ECR Public
+        run: |
+          aws ecr-public get-login-password --region $AWS_REGION \
+            | docker login --username AWS --password-stdin $ECR_PUBLIC_REGISTRY
+
+      - name: Build versioned image
+        run: |
+          VERSION=${{ steps.version.outputs.VERSION }}
+          REPO="$ECR_PUBLIC_REGISTRY/$ECR_ALIAS/${{ matrix.service.ecr_repo }}"
+          docker build -f ${{ matrix.service.dockerfile }} -t "$REPO:$VERSION" .
+          docker tag "$REPO:$VERSION" "$REPO:latest"
+
+      - name: Push versioned image
+        run: |
+          VERSION=${{ steps.version.outputs.VERSION }}
+          REPO="$ECR_PUBLIC_REGISTRY/$ECR_ALIAS/${{ matrix.service.ecr_repo }}"
+          docker push "$REPO:$VERSION"
+          docker push "$REPO:latest"
