@@ -1,0 +1,367 @@
+{
+  "info": {
+    "name": "backend_arquisis API",
+    "_postman_id": "b0a2f3d8-0000-4000-8000-000019827399",
+    "description": "Complete API documentation for backend_arquisis project",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:3000", "type": "string" },
+    { "key": "token", "value": "", "type": "string" },
+    { "key": "api_gateway_token", "value": "", "type": "string" },
+    { "key": "group_id", "value": "21", "type": "string" }
+  ],
+  "item": [
+    {
+      "name": "Properties",
+      "item": [
+        {
+          "name": "List properties",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "x-api-gateway-token", "value": "{{api_gateway_token}}", "type": "text" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/properties?page=1&limit=25",
+              "host": ["{{baseUrl}}"],
+              "path": ["properties"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "limit", "value": "25" },
+                { "key": "price", "value": "", "disabled": true },
+                { "key": "location", "value": "", "disabled": true },
+                { "key": "date", "value": "", "disabled": true },
+                { "key": "url", "value": "", "disabled": true }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get property by id",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "x-api-gateway-token", "value": "{{api_gateway_token}}", "type": "text" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/properties/{{id}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["properties", "{{id}}"]
+            }
+          }
+        },
+        {
+          "name": "Get property by URL slug",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/properties/url/depto-ejemplo",
+              "host": ["{{baseUrl}}"],
+              "path": ["properties", "url", "depto-ejemplo"]
+            }
+          }
+        },
+        {
+          "name": "Create property",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json", "type": "text" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Depto Ejemplo\",\n  \"price\": 120000000,\n  \"currency\": \"CLP\",\n  \"bedrooms\": \"3\",\n  \"m2\": \"75\",\n  \"location\": \"Santiago\",\n  \"img\": \"https://example.com/img.jpg\",\n  \"url\": \"depto-ejemplo\",\n  \"is_project\": false,\n  \"timestamp\": \"2025-11-30T12:00:00Z\",\n  \"visit\": 10\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/properties",
+              "host": ["{{baseUrl}}"],
+              "path": ["properties"]
+            }
+          }
+        },
+        {
+          "name": "Update property (admin)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "x-api-gateway-token", "value": "{{api_gateway_token}}" },
+              { "key": "x-admin-request", "value": "true" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"price\": 130000000,\n  \"visit\": 5\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/properties/1",
+              "host": ["{{baseUrl}}"],
+              "path": ["properties", "1"]
+            }
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "Requests",
+      "item": [
+        {
+          "name": "Create request (local group)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": { "mode": "raw", "raw": "{ \"deposit_token\": null }" },
+            "url": {
+              "raw": "{{baseUrl}}/properties/1/request",
+              "host": ["{{baseUrl}}"],
+              "path": ["properties", "1", "request"]
+            }
+          }
+        },
+        {
+          "name": "Receive request (listener → API)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"request_id\": \"550e8400-e29b-41d4-a716-446655440000\",\n  \"group_id\": \"21\",\n  \"origin\": 1,\n  \"operation\": \"BUY\",\n  \"timestamp\": \"2025-11-30T12:00:00Z\",\n  \"url\": \"depto-ejemplo\",\n  \"deposit_token\": null\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/receive/request",
+              "host": ["{{baseUrl}}"],
+              "path": ["receive", "request"]
+            }
+          }
+        },
+        {
+          "name": "List my requests (requires JWT)",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/requests",
+              "host": ["{{baseUrl}}"],
+              "path": ["requests"]
+            }
+          }
+        },
+        {
+          "name": "Get request by ID",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/requests/550e8400-e29b-41d4-a716-446655440000",
+              "host": ["{{baseUrl}}"],
+              "path": ["requests", "550e8400-e29b-41d4-a716-446655440000"]
+            }
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "Users",
+      "item": [
+        {
+          "name": "Sync user (requires JWT)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/users/sync",
+              "host": ["{{baseUrl}}"],
+              "path": ["users", "sync"]
+            }
+          }
+        },
+        {
+          "name": "Get my wallet",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/users/wallet",
+              "host": ["{{baseUrl}}"],
+              "path": ["users", "wallet"]
+            }
+          }
+        },
+        {
+          "name": "Recharge wallet",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{ \"amount\": 50000 }"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/users/wallet/recharge",
+              "host": ["{{baseUrl}}"],
+              "path": ["users", "wallet", "recharge"]
+            }
+          }
+        },
+        {
+          "name": "List users (dev)",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/users",
+              "host": ["{{baseUrl}}"],
+              "path": ["users"]
+            }
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "Validations",
+      "item": [
+        {
+          "name": "List validations",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/validation",
+              "host": ["{{baseUrl}}"],
+              "path": ["validation"]
+            }
+          }
+        },
+        {
+          "name": "Validation callback (webhook)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"request_id\": \"550e8400-e29b-41d4-a716-446655440000\",\n  \"status\": \"ACCEPTED\",\n  \"reason\": \"Pago verificado correctamente\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/validation/manage",
+              "host": ["{{baseUrl}}"],
+              "path": ["validation", "manage"]
+            }
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "Webpay",
+      "item": [
+        {
+          "name": "Initiate transaction",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{ \"property_id\": 1, \"group_id\": \"{{group_id}}\" }"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/webpay/create",
+              "host": ["{{baseUrl}}"],
+              "path": ["webpay", "create"]
+            }
+          }
+        },
+        {
+          "name": "Commit transaction",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{ \"token_ws\": \"<token_ws>\" }"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/webpay/commit",
+              "host": ["{{baseUrl}}"],
+              "path": ["webpay", "commit"]
+            }
+          }
+        },
+        {
+          "name": "List transactions",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/webpay/list",
+              "host": ["{{baseUrl}}"],
+              "path": ["webpay", "list"]
+            }
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "Proposals",
+      "item": [
+        {
+          "name": "Create proposal (admin)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "x-api-gateway-token", "value": "{{api_gateway_token}}" },
+              { "key": "x-admin-request", "value": "true" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"auction_id\": \"550e8400-e29b-41d4-a716-446655440000\",\n  \"property_url\": \"depto-ejemplo\",\n  \"quantity\": 1\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/proposals/create",
+              "host": ["{{baseUrl}}"],
+              "path": ["proposals", "create"]
+            }
+          }
+        },
+        {
+          "name": "Get proposals (admin)",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "x-api-gateway-token", "value": "{{api_gateway_token}}" },
+              { "key": "x-admin-request", "value": "true" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/proposals",
+              "host": ["{{baseUrl}}"],
+              "path": ["proposals"],
+              "query": [
+                { "key": "auction_id", "value": "", "disabled": true }
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,6 +1,6 @@
 # Backend E2
 - link de la página: https://arquijavi.me
-
+- link documentación: https://laspatitos.postman.co/workspace/My-Workspace~02ac9a63-eddd-4962-88c0-03123aabe7d8/collection/undefined?action=share&creator=29194564
 ## Diagrama UML
 ![Diagrama UML](./UML.png)
 
@@ -88,3 +88,93 @@ Utilizando Github Actions, acciones de AWS y comandos de la consola, se hace lo 
 3. archivo boletahandler.js se encarga de generar la boleta mediante generateInvoice.js y de subir la boleta mediante uploadToS3.js
 4. `serverless deploy` Para realizar deploy de la aplicación a la lambda
 5. Hacer un POST HTTP al url de la lambda para probar su uso
+
+
+
+## Documentacion IAAC
+
+
+
+
+
+El proyecto despliega la siguiente arquitectura en AWS: 
+
+1. Una instancia **EC2 t3.micro** corriendo un servicio web (servidor NGINX).
+2. Una **IP Elástica (EIP)** asociada al EC2
+3. Una **API Gateway (REST API)** actúa como punto de entrada.
+4.  Una **Función Lambda** (el Auth0 Custom Authorizer) valida los tokens JWT en cada solicitud
+ antes de permitir el acceso al EC2.
+5.  Un **Bucket S3** para alamcenar frontend
+6.  Una **CDN** CloudFront
+
+| Recurso Principal | Función | Ubicación en el Código |
+| :--- | :--- | :--- |
+| **Instancia EC2** | Servidor de *backend* (NGINX/aplicación). | `modules/ec2-instance/` |
+| **IP Elástica (EIP)** | Dirección IP pública estática para el EC2. | `modules/ec2-instance/` |
+| **Security Groups** | grupos de seguridad configurados para EC2. | `modules/ec2-instance/` |
+| **API Gateway (REST API)** | Punto de entrada público y capa de enrutamiento. | `main.tf` |
+| **Lambda Authorizer** | Valida tokens JWT (Auth0) antes de autorizar el tráfico. | `auth.tf` |
+| **S3 Bucket** | Almacenamiento remoto del estado de Terraform. | `main.tf` (Bloque `backend`) |
+| **CDN** | Cloudfront. | `frontend.tf` (Bloque `frontend`) |
+| **S3 Bucket** | Almacenamiento front | `frontend.tf` (Bloque `frontend`) |
+
+---
+
+## 2. 🗄️ Gestión de Estado y Credenciales
+
+### A. Backend Remoto (S3)
+
+El estado de Terraform se almacena de forma remota para evitar conflictos entre miembros del equipo.
+
+| Configuración | Valor | Función |
+| :--- | :--- | :--- |
+| **Bucket** | `terraform-buket-grupo17` | Almacena el archivo `terraform.tfstate`. |
+| **Región** | `us-east-1` | Región del bucket y de todos los recursos. |
+| **Clave** | `terraform.tfstate` | Nombre del archivo de estado dentro del bucket. |
+
+### B. Credenciales y Acceso
+
+Se debe tener un **Usuario IAM ** con los permisos necesarios para EC2, S3, Lambda y API Gateway, configuradas localmente con:
+
+```bash
+aws configure
+```
+
+## 3. 💾 Flujo de Trabajo de IaaC (Terraform)
+
+### A. Flujo de Archivos
+
+| Archivo | Contenido | Propósito |
+| :--- | :--- | :--- |
+| **`main.tf`** | Definición del API Gateway (API, Recursos, Despliegue) y la referencia al módulo EC2. | Orquestación principal de la infraestructura. |
+| **`auth.tf`** | Definición del IAM Role, la Función Lambda y el Custom Authorizer. | Define la capa de seguridad y autenticación. |
+| **`modules/ec2-instance/`** | Configuración de la EC2, Security Group, EIP y *user-data*. | Reutilización de la infraestructura básica. |
+| **`.gitignore`** | Excluye `.terraform/`, `*.tfstate`, y `*.zip` (binarios de Lambda). | Evita subir archivos sensibles y pesados al repositorio. |
+| **`frontend.tf`** | Configuración del S3 Bucket y CloudFront Distribution para el frontend. | Despliegue de la capa de presentación estática. |
+| **`frontend_policy.tf`** |Política de Bucket S3 para restringir el acceso solo a CloudFront (OAC). | Seguridad del S3 de frontend. |
+## 4. 🌐 Despliegue del Frontend (CloudFront/S3)
+
+
+| Recurso | Función | Seguridad Clave |
+| :--- | :--- | :--- |
+| **`aws_s3_bucket.frontend_bucket`** | Almacena los archivos estáticos del *frontend*. | El acceso público está **bloqueado**. |
+| **`aws_cloudfront_origin_access_control.oac`** | Establece la relación de confianza entre CloudFront y el *bucket* S3. | Asegura que solo una solicitud válida de la CDN pueda acceder al origen. |
+| **`aws_s3_bucket_policy`** | Se aplica la política de IAM que **bloquea el acceso público directo** y solo permite que la distribución de CloudFront (a través del OAC) acceda a los objetos. | Restringe el acceso a nivel de *bucket*. |
+| **`aws_cloudfront_distribution.frontend_cdn`** | Se crea una CDN global que sirve los archivos estáticos con HTTPS y *caching* optimizado. | Sirve la aplicación rápidamente a usuarios de todo el mundo y aplica **HTTPS** por defecto. |
+
+---
+
+
+### B. Flujo de Comandos Estándar
+
+Una vez que el proyecto ha sido inicializado y el estado migrado a S3:
+```bash
+#Para inicializar el proyecto, se usa cuanos se añaden archivos
+terraform init
+
+#Este comando compara el codigo actual con el estado remoto en el S3 y se debe aplicar despues de cualquier cambio
+terraform plan
+
+#Ejecuta el plan anterior y aplica los cambios en AWS
+terraform apply
+```
